@@ -98,17 +98,33 @@ export function DocumentsView({ isOfflineMode }: DocumentsViewProps) {
       });
       return;
     }
+    toast({ title: 'Generating preview...', description: 'Please wait a moment.' });
     try {
       const { downloadUrl } = await backend.workspace.getDocument({ id: doc.id });
-      const win = window.open(downloadUrl, '_blank');
-      if (!win) {
-        window.location.href = downloadUrl;
+      
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const fileUrl = URL.createObjectURL(blob);
+      
+      const win = window.open(fileUrl, '_blank');
+      if (win) {
+        win.focus();
+      } else {
+        // Fallback for browsers that block popups
+        toast({
+          title: 'Popup blocked',
+          description: 'Please allow popups for this site to preview files.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
-      console.error('Failed to get download URL:', error);
+      console.error('Failed to preview document:', error);
       toast({
         title: 'Error',
-        description: 'Failed to get download URL',
+        description: 'Could not open file for preview. Please try downloading it.',
         variant: 'destructive',
       });
     }
