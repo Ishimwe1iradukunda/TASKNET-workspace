@@ -107,6 +107,10 @@ export function CalendarView({ isOfflineMode }: CalendarViewProps) {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + amount, 1));
   };
 
+  const monthEvents = events.filter(
+    e => e.date.getMonth() === currentDate.getMonth() && e.date.getFullYear() === currentDate.getFullYear()
+  ).sort((a, b) => a.date.getTime() - b.date.getTime());
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-border flex items-center justify-between">
@@ -124,7 +128,8 @@ export function CalendarView({ isOfflineMode }: CalendarViewProps) {
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-7 gap-px bg-border border-l border-t">
+        {/* Desktop Grid View */}
+        <div className="hidden md:grid grid-cols-7 gap-px bg-border border-l border-t">
           {weekDays.map(day => (
             <div key={day} className="p-2 text-center font-medium bg-muted/50">
               {day}
@@ -159,6 +164,29 @@ export function CalendarView({ isOfflineMode }: CalendarViewProps) {
               </div>
             );
           })}
+        </div>
+
+        {/* Mobile List View */}
+        <div className="md:hidden space-y-4">
+          {monthEvents.length > 0 ? monthEvents.map(event => (
+            <div key={event.id} className="flex items-center gap-4 p-3 rounded-lg border bg-card">
+              <div className="flex flex-col items-center justify-center w-12">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {event.date.toLocaleString('default', { month: 'short' })}
+                </span>
+                <span className="text-xl font-bold">{event.date.getDate()}</span>
+              </div>
+              <div className={`w-1 h-10 rounded-full ${event.color}`} />
+              <div className="flex-1">
+                <p className="font-medium">{event.title}</p>
+                <p className="text-sm text-muted-foreground capitalize">{event.type.replace('-', ' ')}</p>
+              </div>
+            </div>
+          )) : (
+            <div className="text-center py-12 text-muted-foreground">
+              No events this month.
+            </div>
+          )}
         </div>
       </div>
     </div>

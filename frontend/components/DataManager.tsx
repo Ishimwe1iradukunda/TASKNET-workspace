@@ -312,7 +312,7 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
       
       <div className="flex-1 overflow-auto p-6">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
             <TabsTrigger value="sync">Sync</TabsTrigger>

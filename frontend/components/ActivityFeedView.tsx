@@ -216,7 +216,7 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
           </Badge>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -228,7 +228,7 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
           </div>
           
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
@@ -243,7 +243,7 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
           </Select>
           
           <Select value={actionFilter} onValueChange={setActionFilter}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Filter by action" />
             </SelectTrigger>
             <SelectContent>

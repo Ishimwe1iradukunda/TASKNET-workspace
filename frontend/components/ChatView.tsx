@@ -7,6 +7,7 @@ import { SecondarySidebar } from './SecondarySidebar';
 import backend from '~backend/client';
 import type { Project } from '~backend/workspace/projects/create';
 import type { ChatMessage } from '~backend/chat/chat';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ChatViewProps {
   isOfflineMode: boolean;
@@ -115,6 +116,17 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
         ))}
       </SecondarySidebar>
       <div className="flex-1 flex flex-col">
+        <div className="md:hidden p-4 border-b">
+          <Select value={selectedProject?.id || ''} onValueChange={(id) => setSelectedProject(projects.find(p => p.id === id) || null)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a project..." />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map(project => <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
         {selectedProject ? (
           <>
             <div className="p-4 border-b border-border">
@@ -149,7 +161,7 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 hidden md:flex items-center justify-center">
             <div className="text-center">
               <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Select a project to chat</h3>

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
 import backend from '~backend/client';
@@ -74,7 +73,8 @@ export function PlannerView({ isOfflineMode }: PlannerViewProps) {
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+        {/* Desktop Grid View */}
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-7 gap-4">
           {weekDays.map(day => {
             const dayTasks = tasks.filter(
               task => task.dueDate && new Date(task.dueDate).toDateString() === day.toDateString()
@@ -102,6 +102,34 @@ export function PlannerView({ isOfflineMode }: PlannerViewProps) {
                     <div className="text-center text-xs text-muted-foreground pt-4">No tasks due</div>
                   )}
                 </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Mobile List View */}
+        <div className="md:hidden space-y-4">
+          {weekDays.map(day => {
+            const dayTasks = tasks.filter(
+              task => task.dueDate && new Date(task.dueDate).toDateString() === day.toDateString()
+            );
+            const isToday = day.toDateString() === new Date().toDateString();
+
+            return (
+              <div key={day.toISOString()}>
+                <h3 className={`font-semibold mb-2 ${isToday ? 'text-primary' : ''}`}>
+                  {day.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                </h3>
+                {dayTasks.length > 0 ? dayTasks.map(task => (
+                  <Card key={task.id} className="mb-2">
+                    <CardContent className="p-3 flex items-start gap-2">
+                      <div className={`w-2 h-2 rounded-full mt-1.5 ${getPriorityColor(task.priority)}`} />
+                      <p className="text-sm font-medium">{task.title}</p>
+                    </CardContent>
+                  </Card>
+                )) : (
+                  <p className="text-sm text-muted-foreground">No tasks due.</p>
+                )}
               </div>
             );
           })}

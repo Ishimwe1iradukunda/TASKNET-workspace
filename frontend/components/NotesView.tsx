@@ -369,7 +369,7 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
           </div>
         </div>
         
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -380,7 +380,7 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
             />
           </div>
           <Select value={selectedTag || 'all'} onValueChange={(value) => setSelectedTag(value === 'all' ? '' : value)}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Filter by tag" />
             </SelectTrigger>
             <SelectContent>
@@ -391,7 +391,7 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={(value: 'updated' | 'created' | 'title') => setSortBy(value)}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

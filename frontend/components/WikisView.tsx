@@ -10,6 +10,7 @@ import { LocalStorageManager } from '../utils/localStorage';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { SecondarySidebar } from './SecondarySidebar';
 import backend from '~backend/client';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Wiki {
   id: string;
@@ -59,6 +60,8 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
       setWikis(loadedWikis);
       if (loadedWikis.length > 0 && !selectedWiki) {
         setSelectedWiki(loadedWikis[0]);
+      } else if (loadedWikis.length === 0) {
+        setSelectedWiki(null);
       }
     } catch (error) {
       console.error('Failed to load wikis:', error);
@@ -152,10 +155,13 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
       } else {
         await backend.workspace.deleteWiki({ id });
       }
-      setWikis(prev => prev.filter(w => w.id !== id));
-      if (selectedWiki?.id === id) {
-        setSelectedWiki(null);
-      }
+      setWikis(prev => {
+        const newWikis = prev.filter(w => w.id !== id);
+        if (selectedWiki?.id === id) {
+          setSelectedWiki(newWikis.length > 0 ? newWikis[0] : null);
+        }
+        return newWikis;
+      });
       toast({
         title: "Success",
         description: "Wiki page deleted successfully",
@@ -313,6 +319,17 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
       </SecondarySidebar>
       
       <div className="flex-1 flex flex-col">
+        <div className="md:hidden p-4 border-b">
+          <Select value={selectedWiki?.id || ''} onValueChange={(id) => setSelectedWiki(wikis.find(w => w.id === id) || null)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a wiki page..." />
+            </SelectTrigger>
+            <SelectContent>
+              {wikis.map(wiki => <SelectItem key={wiki.id} value={wiki.id}>{wiki.title}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
         {selectedWiki ? (
           <>
             <div className="p-6 border-b border-border">
@@ -363,7 +380,7 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 hidden md:flex items-center justify-center">
             <div className="text-center">
               <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Select a wiki page</h3>

@@ -465,7 +465,7 @@ export function TasksView({ isOfflineMode }: TasksViewProps) {
           </div>
         </div>
         
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -476,7 +476,7 @@ export function TasksView({ isOfflineMode }: TasksViewProps) {
             />
           </div>
           <Select value={statusFilter || 'all'} onValueChange={(value) => setStatusFilter(value === 'all' ? '' : value)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -487,7 +487,7 @@ export function TasksView({ isOfflineMode }: TasksViewProps) {
             </SelectContent>
           </Select>
           <Select value={priorityFilter || 'all'} onValueChange={(value) => setPriorityFilter(value === 'all' ? '' : value)}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
@@ -498,7 +498,7 @@ export function TasksView({ isOfflineMode }: TasksViewProps) {
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={(value: 'updated' | 'created' | 'priority' | 'dueDate') => setSortBy(value)}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

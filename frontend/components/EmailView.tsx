@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
 import backend from '~backend/client';
 import type { Email } from '~backend/workspace/emails/list';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EmailViewProps {
   isOfflineMode: boolean;
@@ -21,11 +22,18 @@ export function EmailView({ isOfflineMode }: EmailViewProps) {
 
   const loadEmails = async () => {
     try {
+      let loadedEmails: Email[];
       if (isOfflineMode) {
-        setEmails(LocalStorageManager.getEmails());
+        loadedEmails = LocalStorageManager.getEmails();
       } else {
         const response = await backend.workspace.listEmails();
-        setEmails(response.emails);
+        loadedEmails = response.emails;
+      }
+      setEmails(loadedEmails);
+      if (loadedEmails.length > 0 && !selectedEmail) {
+        setSelectedEmail(loadedEmails[0]);
+      } else if (loadedEmails.length === 0) {
+        setSelectedEmail(null);
       }
     } catch (error) {
       console.error('Failed to load emails:', error);
@@ -61,10 +69,13 @@ export function EmailView({ isOfflineMode }: EmailViewProps) {
       } else {
         await backend.workspace.deleteEmail({ id });
       }
-      setEmails(prev => prev.filter(e => e.id !== id));
-      if (selectedEmail?.id === id) {
-        setSelectedEmail(null);
-      }
+      setEmails(prev => {
+        const newEmails = prev.filter(e => e.id !== id);
+        if (selectedEmail?.id === id) {
+          setSelectedEmail(newEmails.length > 0 ? newEmails[0] : null);
+        }
+        return newEmails;
+      });
       toast({
         title: "Success",
         description: "Email deleted",
@@ -81,7 +92,7 @@ export function EmailView({ isOfflineMode }: EmailViewProps) {
 
   return (
     <div className="flex h-full">
-      <div className="w-96 border-r border-border flex flex-col">
+      <div className="w-full md:w-96 border-r border-border flex-col h-full hidden md:flex">
         <div className="p-4 border-b border-border">
           <h2 className="text-xl font-bold">Inbox</h2>
         </div>
@@ -116,6 +127,17 @@ export function EmailView({ isOfflineMode }: EmailViewProps) {
         </div>
       </div>
       <div className="flex-1 flex flex-col">
+        <div className="md:hidden p-4 border-b">
+          <Select value={selectedEmail?.id || ''} onValueChange={(id) => handleSelectEmail(emails.find(e => e.id === id)!)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an email..." />
+            </SelectTrigger>
+            <SelectContent>
+              {emails.map(email => <SelectItem key={email.id} value={email.id}>{email.subject}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
         {selectedEmail ? (
           <>
             <div className="p-4 border-b border-border flex items-center justify-between">
@@ -138,7 +160,7 @@ export function EmailView({ isOfflineMode }: EmailViewProps) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-center text-muted-foreground">
+          <div className="flex-1 hidden md:flex items-center justify-center text-center text-muted-foreground">
             <div>
               <Mail className="w-16 h-16 mx-auto mb-4" />
               <p>Select an email to read</p>

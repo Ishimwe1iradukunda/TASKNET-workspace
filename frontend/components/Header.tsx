@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Database,
   Scissors,
+  MoreVertical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,8 +50,8 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
   ];
 
   return (
-    <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shrink-0 transition-colors">
-      <div className="flex items-center gap-6">
+    <header className="h-16 bg-background border-b border-border flex items-center justify-between px-4 sm:px-6 shrink-0 transition-colors">
+      <div className="flex items-center gap-2 sm:gap-6">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
             <CheckSquare className="w-4 h-4 text-primary-foreground" />
@@ -59,7 +60,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -84,6 +85,30 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
               {item.label}
             </Button>
           ))}
+        </div>
+
+        <div className="lg:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" title="More" className="menu-hover menu-btn">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Features</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {featuresItems.map(item => (
+                <DropdownMenuItem
+                  key={item.id}
+                  onClick={() => onViewChange(item.id)}
+                  className="flex items-center gap-2 menu-dd-hover"
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <DropdownMenu>
