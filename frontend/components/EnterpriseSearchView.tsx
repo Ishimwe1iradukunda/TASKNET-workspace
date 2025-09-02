@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, FileText, CheckSquare, FolderOpen, BookOpen, Mail, File, Filter } from 'lucide-react';
+import { Search, FileText, CheckSquare, FolderOpen, BookOpen, Mail, File, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { LocalStorageManager } from '../utils/localStorage';
 import backend from '~backend/client';
 
 interface SearchResult {
@@ -20,10 +21,11 @@ interface SearchResult {
 
 interface EnterpriseSearchViewProps {
   isOfflineMode: boolean;
+  globalSearchQuery?: string;
 }
 
-export function EnterpriseSearchView({ isOfflineMode }: EnterpriseSearchViewProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: EnterpriseSearchViewProps) {
+  const [searchQuery, setSearchQuery] = useState(globalSearchQuery);
   const [searchType, setSearchType] = useState<string>('all');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -33,18 +35,194 @@ export function EnterpriseSearchView({ isOfflineMode }: EnterpriseSearchViewProp
   }>({ types: [], tags: [] });
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (globalSearchQuery) {
+      setSearchQuery(globalSearchQuery);
+      performSearch(globalSearchQuery);
+    }
+  }, [globalSearchQuery]);
+
+  const performOfflineSearch = (query: string, type?: string) => {
+    const searchTerm = query.toLowerCase();
+    const results: SearchResult[] = [];
+    
+    // Search notes
+    if (!type || type === 'all' || type === 'notes') {
+      const notes = LocalStorageManager.getNotes();
+      notes.forEach(note => {
+        const titleMatch = note.title.toLowerCase().includes(searchTerm);
+        const contentMatch = note.content.toLowerCase().includes(searchTerm);
+        const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+        
+        if (titleMatch || contentMatch || tagMatch) {
+          results.push({
+            id: note.id,
+            type: 'note',
+            title: note.title,
+            content: note.content,
+            excerpt: note.content.substring(0, 200) + '...',
+            score: titleMatch ? 1.0 : contentMatch ? 0.8 : 0.6,
+            metadata: { tags: note.tags, updatedAt: note.updatedAt },
+          });
+        }
+      });
+    }
+    
+    // Search tasks
+    if (!type || type === 'all' || type === 'tasks') {
+      const tasks = LocalStorageManager.getTasks();
+      tasks.forEach(task => {
+        const titleMatch = task.title.toLowerCase().includes(searchTerm);
+        const descMatch = task.description?.toLowerCase().includes(searchTerm);
+        const tagMatch = task.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+        
+        if (titleMatch || descMatch || tagMatch) {
+          results.push({
+            id: task.id,
+            type: 'task',
+            title: task.title,
+            content: task.description || '',
+            excerpt: (task.description || '').substring(0, 200) + '...',
+            score: titleMatch ? 1.0 : descMatch ? 0.8 : 0.6,
+            metadata: { 
+              status: task.status, 
+              priority: task.priority, 
+              tags: task.tags, 
+              updatedAt: task.updatedAt 
+            },
+          });
+        }
+      });
+    }
+    
+    // Search projects
+    if (!type || type === 'all' || type === 'projects') {
+      const projects = LocalStorageManager.getProjects();
+      projects.forEach(project => {
+        const nameMatch = project.name.toLowerCase().includes(searchTerm);
+        const descMatch = project.description?.toLowerCase().includes(searchTerm);
+        
+        if (nameMatch || descMatch) {
+          results.push({
+            id: project.id,
+            type: 'project',
+            title: project.name,
+            content: project.description || '',
+            excerpt: (project.description || '').substring(0, 200) + '...',
+            score: nameMatch ? 1.0 : 0.8,
+            metadata: { status: project.status, updatedAt: project.updatedAt },
+          });
+        }
+      });
+    }
+    
+    // Search wikis
+    if (!type || type === 'all' || type === 'wikis') {
+      const wikis = LocalStorageManager.getWikis();
+      wikis.forEach(wiki => {
+        const titleMatch = wiki.title.toLowerCase().includes(searchTerm);
+        const contentMatch = wiki.content.toLowerCase().includes(searchTerm);
+        const tagMatch = wiki.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+        
+        if (titleMatch || contentMatch || tagMatch) {
+          results.push({
+            id: wiki.id,
+            type: 'wiki',
+            title: wiki.title,
+            content: wiki.content,
+            excerpt: wiki.content.substring(0, 200) + '...',
+            score: titleMatch ? 1.0 : contentMatch ? 0.8 : 0.6,
+            metadata: { tags: wiki.tags, updatedAt: wiki.updatedAt },
+          });
+        }
+      });
+    }
+    
+    // Search emails
+    if (!type || type === 'all' || type === 'emails') {
+      const emails = LocalStorageManager.getEmails();
+      emails.forEach(email => {
+        const subjectMatch = email.subject.toLowerCase().includes(searchTerm);
+        const bodyMatch = email.body.toLowerCase().includes(searchTerm);
+        const senderMatch = email.sender.toLowerCase().includes(searchTerm);
+        
+        if (subjectMatch || bodyMatch || senderMatch) {
+          results.push({
+            id: email.id,
+            type: 'email',
+            title: email.subject,
+            content: email.body,
+            excerpt: email.body.substring(0, 200) + '...',
+            score: subjectMatch ? 1.0 : bodyMatch ? 0.8 : 0.6,
+            metadata: { sender: email.sender, isRead: email.isRead, receivedAt: email.receivedAt },
+          });
+        }
+      });
+    }
+    
+    // Search documents
+    if (!type || type === 'all' || type === 'documents') {
+      const documents = LocalStorageManager.getDocuments();
+      documents.forEach(doc => {
+        const nameMatch = doc.name.toLowerCase().includes(searchTerm);
+        
+        if (nameMatch) {
+          results.push({
+            id: doc.id,
+            type: 'document',
+            title: doc.name,
+            content: '',
+            excerpt: `${doc.fileType} - ${(doc.size / 1024 / 1024).toFixed(2)} MB`,
+            score: 1.0,
+            metadata: { fileType: doc.fileType, size: doc.size, createdAt: doc.createdAt },
+          });
+        }
+      });
+    }
+    
+    // Sort by score and return
+    return results.sort((a, b) => b.score - a.score);
+  };
+
   const search = async () => {
     if (!searchQuery.trim()) return;
     
     setIsSearching(true);
     try {
-      const response = await backend.workspace.enterpriseSearch({
-        query: searchQuery,
-        type: searchType === 'all' ? undefined : searchType as any,
-        limit: 50,
-      });
-      setResults(response.results);
-      setFacets(response.facets);
+      let searchResults: SearchResult[];
+      
+      if (isOfflineMode) {
+        searchResults = performOfflineSearch(searchQuery, searchType === 'all' ? undefined : searchType);
+        
+        // Generate facets for offline search
+        const typeCounts = searchResults.reduce((acc, result) => {
+          acc[result.type] = (acc[result.type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        const tagCounts = searchResults.reduce((acc, result) => {
+          const tags = result.metadata.tags || [];
+          tags.forEach((tag: string) => {
+            acc[tag] = (acc[tag] || 0) + 1;
+          });
+          return acc;
+        }, {} as Record<string, number>);
+        
+        setFacets({
+          types: Object.entries(typeCounts).map(([type, count]) => ({ type, count })),
+          tags: Object.entries(tagCounts).map(([tag, count]) => ({ tag, count })),
+        });
+      } else {
+        const response = await backend.workspace.enterpriseSearch({
+          query: searchQuery,
+          type: searchType === 'all' ? undefined : searchType as any,
+          limit: 50,
+        });
+        searchResults = response.results;
+        setFacets(response.facets);
+      }
+      
+      setResults(searchResults);
     } catch (error) {
       console.error('Search failed:', error);
       toast({
@@ -61,6 +239,12 @@ export function EnterpriseSearchView({ isOfflineMode }: EnterpriseSearchViewProp
     if (e.key === 'Enter') {
       search();
     }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setResults([]);
+    setFacets({ types: [], tags: [] });
   };
 
   const getTypeIcon = (type: string) => {
@@ -87,30 +271,10 @@ export function EnterpriseSearchView({ isOfflineMode }: EnterpriseSearchViewProp
     }
   };
 
-  if (isOfflineMode) {
-    return (
-      <div className="flex flex-col h-full">
-        <div className="p-6 border-b border-border">
-          <h2 className="text-2xl font-bold">Enterprise Search</h2>
-          <p className="text-muted-foreground">Search across all your content</p>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Search className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Search Unavailable</h3>
-            <p className="text-muted-foreground">
-              Enterprise search requires online mode to function properly.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-border">
-        <h2 className="text-2xl font-bold mb-4">Enterprise Search</h2>
+        <h2 className="text-2xl font-bold mb-4">Search</h2>
         
         <div className="flex gap-4 mb-4">
           <div className="relative flex-1">
@@ -120,8 +284,18 @@ export function EnterpriseSearchView({ isOfflineMode }: EnterpriseSearchViewProp
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-10"
+              className="pl-10 pr-10"
             />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1 h-8 w-8 p-0"
+                onClick={clearSearch}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
           </div>
           <Select value={searchType} onValueChange={setSearchType}>
             <SelectTrigger className="w-48">

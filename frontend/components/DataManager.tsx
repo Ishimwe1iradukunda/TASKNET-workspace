@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Download, Upload, RefreshCw, Trash2, AlertCircle } from 'lucide-react';
+import { Download, Upload, RefreshCw, Trash2, AlertCircle, FileText, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { LocalStorageManager } from '../utils/localStorage';
 import backend from '~backend/client';
 
@@ -15,6 +16,7 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const { toast } = useToast();
 
   const exportData = async () => {
@@ -67,17 +69,73 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
     if (!file) return;
     
     setIsImporting(true);
+    setImportProgress(0);
+    
     try {
       const text = await file.text();
       const data = JSON.parse(text);
       
+      // Validate data structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid file format');
+      }
+      
+      setImportProgress(25);
+      
       if (isOfflineMode) {
-        if (data.notes) LocalStorageManager.saveNotes(data.notes);
-        if (data.tasks) LocalStorageManager.saveTasks(data.tasks);
-        if (data.wikis) LocalStorageManager.saveWikis(data.wikis);
-        if (data.projects) LocalStorageManager.saveProjects(data.projects);
-        if (data.emails) LocalStorageManager.saveEmails(data.emails);
-        if (data.documents) LocalStorageManager.saveDocuments(data.documents);
+        if (data.notes && Array.isArray(data.notes)) {
+          LocalStorageManager.saveNotes(data.notes.map((note: any) => ({
+            ...note,
+            createdAt: new Date(note.createdAt || note.created_at),
+            updatedAt: new Date(note.updatedAt || note.updated_at),
+          })));
+        }
+        setImportProgress(40);
+        
+        if (data.tasks && Array.isArray(data.tasks)) {
+          LocalStorageManager.saveTasks(data.tasks.map((task: any) => ({
+            ...task,
+            createdAt: new Date(task.createdAt || task.created_at),
+            updatedAt: new Date(task.updatedAt || task.updated_at),
+            dueDate: task.dueDate || task.due_date ? new Date(task.dueDate || task.due_date) : undefined,
+          })));
+        }
+        setImportProgress(60);
+        
+        if (data.wikis && Array.isArray(data.wikis)) {
+          LocalStorageManager.saveWikis(data.wikis.map((wiki: any) => ({
+            ...wiki,
+            createdAt: new Date(wiki.createdAt || wiki.created_at),
+            updatedAt: new Date(wiki.updatedAt || wiki.updated_at),
+          })));
+        }
+        setImportProgress(75);
+        
+        if (data.projects && Array.isArray(data.projects)) {
+          LocalStorageManager.saveProjects(data.projects.map((project: any) => ({
+            ...project,
+            createdAt: new Date(project.createdAt || project.created_at),
+            updatedAt: new Date(project.updatedAt || project.updated_at),
+            startDate: project.startDate || project.start_date ? new Date(project.startDate || project.start_date) : undefined,
+            endDate: project.endDate || project.end_date ? new Date(project.endDate || project.end_date) : undefined,
+          })));
+        }
+        setImportProgress(85);
+        
+        if (data.emails && Array.isArray(data.emails)) {
+          LocalStorageManager.saveEmails(data.emails.map((email: any) => ({
+            ...email,
+            receivedAt: new Date(email.receivedAt || email.received_at),
+          })));
+        }
+        setImportProgress(95);
+        
+        if (data.documents && Array.isArray(data.documents)) {
+          LocalStorageManager.saveDocuments(data.documents.map((doc: any) => ({
+            ...doc,
+            createdAt: new Date(doc.createdAt || doc.created_at),
+          })));
+        }
       } else {
         await backend.workspace.importData({
           notes: data.notes,
@@ -89,6 +147,8 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
           overwrite: false,
         });
       }
+      
+      setImportProgress(100);
       
       toast({
         title: "Success",
@@ -103,6 +163,7 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
       });
     } finally {
       setIsImporting(false);
+      setImportProgress(0);
       event.target.value = '';
     }
   };
@@ -166,6 +227,7 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
   };
 
   const stats = getStorageStats();
+  const totalItems = Object.values(stats).reduce((sum, count) => sum + count, 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -189,15 +251,48 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
         
         <Card>
           <CardHeader>
-            <CardTitle>Local Storage Statistics</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Local Storage Statistics
+            </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2">
-            <span>Notes:</span><span className="font-medium">{stats.notes}</span>
-            <span>Tasks:</span><span className="font-medium">{stats.tasks}</span>
-            <span>Wiki Pages:</span><span className="font-medium">{stats.wikis}</span>
-            <span>Projects:</span><span className="font-medium">{stats.projects}</span>
-            <span>Emails:</span><span className="font-medium">{stats.emails}</span>
-            <span>Documents:</span><span className="font-medium">{stats.documents}</span>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{totalItems}</div>
+                <div className="text-sm text-muted-foreground">Total Items</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{stats.tasks}</div>
+                <div className="text-sm text-muted-foreground">Active Tasks</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="flex justify-between">
+                <span>Notes:</span>
+                <span className="font-medium">{stats.notes}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tasks:</span>
+                <span className="font-medium">{stats.tasks}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Wiki Pages:</span>
+                <span className="font-medium">{stats.wikis}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Projects:</span>
+                <span className="font-medium">{stats.projects}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Emails:</span>
+                <span className="font-medium">{stats.emails}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Documents:</span>
+                <span className="font-medium">{stats.documents}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
@@ -212,13 +307,31 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
                 {isExporting ? 'Exporting...' : 'Export Data'}
               </Button>
               <Button asChild variant="outline" className="flex-1" disabled={isImporting}>
-                <label htmlFor="import-file">
+                <label htmlFor="import-file" className="cursor-pointer">
                   <Upload className="w-4 h-4 mr-2" />
                   {isImporting ? 'Importing...' : 'Import Data'}
-                  <input id="import-file" type="file" accept=".json" className="hidden" onChange={importData} disabled={isImporting} />
+                  <input 
+                    id="import-file" 
+                    type="file" 
+                    accept=".json" 
+                    className="hidden" 
+                    onChange={importData} 
+                    disabled={isImporting} 
+                  />
                 </label>
               </Button>
             </div>
+            
+            {isImporting && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Importing data...</span>
+                  <span>{importProgress}%</span>
+                </div>
+                <Progress value={importProgress} className="w-full" />
+              </div>
+            )}
+            
             <p className="text-sm text-muted-foreground">
               Export your data as JSON for backup or transfer. Import JSON files to restore data.
             </p>

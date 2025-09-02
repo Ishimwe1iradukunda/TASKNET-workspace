@@ -41,9 +41,12 @@ interface HeaderProps {
   onViewChange: (view: ViewType) => void;
   isOfflineMode: boolean;
   onOfflineModeToggle: (offline: boolean) => void;
+  onGlobalSearch?: (query: string) => void;
 }
 
-export function Header({ currentView, onViewChange, isOfflineMode, onOfflineModeToggle }: HeaderProps) {
+export function Header({ currentView, onViewChange, isOfflineMode, onOfflineModeToggle, onGlobalSearch }: HeaderProps) {
+  const [searchQuery, setSearchQuery] = React.useState('');
+
   const mainNavItems = [
     { id: 'dashboard' as ViewType, icon: BarChart3, label: 'Dashboard' },
     { id: 'tasks' as ViewType, icon: CheckSquare, label: 'Tasks' },
@@ -78,6 +81,14 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
     { id: 'pdf-tools' as ViewType, icon: FileImage, label: 'PDF Tools' },
     { id: 'data' as ViewType, icon: Database, label: 'Data Manager' },
   ];
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim() && onGlobalSearch) {
+      onGlobalSearch(searchQuery.trim());
+      onViewChange('search');
+    }
+  };
 
   const NavDropdown = ({ label, items }: { label: string, items: { id: ViewType, icon: React.ElementType, label: string }[] }) => (
     <DropdownMenu>
@@ -128,10 +139,15 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="relative hidden md:block">
+        <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search..." className="pl-10 w-48" />
-        </div>
+          <Input 
+            placeholder="Search..." 
+            className="pl-10 w-48"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </form>
 
         <Button
           variant="ghost"

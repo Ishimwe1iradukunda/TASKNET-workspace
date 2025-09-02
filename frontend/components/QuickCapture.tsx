@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Zap, CheckSquare, FileText, Target } from 'lucide-react';
+import { Plus, Zap, CheckSquare, FileText, Target, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,7 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [dueDate, setDueDate] = useState('');
   const [tags, setTags] = useState('');
   const { toast } = useToast();
 
@@ -51,6 +52,7 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
             tags: parsedTags,
             priority,
             status: 'todo',
+            dueDate: dueDate ? new Date(dueDate) : undefined,
           });
         } else {
           await backend.workspace.createTask({
@@ -58,6 +60,7 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
             description: content || undefined,
             tags: parsedTags,
             priority,
+            dueDate: dueDate ? new Date(dueDate) : undefined,
           });
         }
       } else if (captureType === 'note') {
@@ -97,6 +100,7 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
       setContent('');
       setTags('');
       setPriority('medium');
+      setDueDate('');
       setIsOpen(false);
 
       toast({
@@ -123,7 +127,10 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50">
+          <Button 
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 hover:shadow-xl transition-shadow"
+            size="icon"
+          >
             <Plus className="w-6 h-6" />
           </Button>
         </DialogTrigger>
@@ -181,20 +188,50 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
               />
             </div>
 
-            {/* Task-specific Priority */}
+            {/* Task-specific fields */}
             {captureType === 'task' && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Priority</label>
-                <Select value={priority} onValueChange={(value: 'low' | 'medium' | 'high') => setPriority(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low Priority</SelectItem>
-                    <SelectItem value="medium">Medium Priority</SelectItem>
-                    <SelectItem value="high">High Priority</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Priority</label>
+                  <Select value={priority} onValueChange={(value: 'low' | 'medium' | 'high') => setPriority(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          Low Priority
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="medium">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                          Medium Priority
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="high">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                          High Priority
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Due Date (optional)</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -206,6 +243,15 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
               />
+              {tags && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {tags.split(',').map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {tag.trim()}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

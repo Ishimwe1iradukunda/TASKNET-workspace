@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Tag, ExternalLink, FileText, Grid, List, Star, Archive } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Tag, ExternalLink, FileText, Grid, List, Star, Archive, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
 import { MarkdownRenderer } from './MarkdownRenderer';
-import { QuickCapture } from './QuickCapture';
 import backend from '~backend/client';
 import type { Note } from '~backend/workspace/notes/create';
 
@@ -154,6 +153,8 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
   };
 
   const deleteNote = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this note?')) return;
+    
     try {
       if (isOfflineMode) {
         LocalStorageManager.deleteNote(id);
@@ -178,8 +179,9 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
   };
 
   const getAllTags = () => {
+    const allNotes = isOfflineMode ? LocalStorageManager.getNotes() : notes;
     const tags = new Set<string>();
-    notes.forEach(note => note.tags.forEach(tag => tags.add(tag)));
+    allNotes.forEach(note => note.tags.forEach(tag => tags.add(tag)));
     return Array.from(tags);
   };
 
@@ -193,6 +195,11 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
     });
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedTag('');
+  };
+
   const NoteCard = ({ note }: { note: Note }) => (
     <Card key={note.id} className="h-fit hover:shadow-md transition-shadow">
       <CardHeader>
@@ -202,7 +209,12 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
             {note.tags.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {note.tags.map(tag => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
+                  <Badge 
+                    key={tag} 
+                    variant="secondary" 
+                    className="text-xs cursor-pointer hover:bg-secondary/80"
+                    onClick={() => setSelectedTag(tag)}
+                  >
                     {tag}
                   </Badge>
                 ))}
@@ -256,7 +268,12 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-medium truncate">{note.title}</h3>
               {note.tags.slice(0, 3).map(tag => (
-                <Badge key={tag} variant="outline" className="text-xs">
+                <Badge 
+                  key={tag} 
+                  variant="outline" 
+                  className="text-xs cursor-pointer hover:bg-secondary/50"
+                  onClick={() => setSelectedTag(tag)}
+                >
                   {tag}
                 </Badge>
               ))}
@@ -380,6 +397,12 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
               <SelectItem value="title">Alphabetical</SelectItem>
             </SelectContent>
           </Select>
+          {(searchTerm || selectedTag) && (
+            <Button variant="outline" onClick={clearFilters}>
+              <Filter className="w-4 h-4 mr-2" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
       
@@ -408,8 +431,6 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
           </div>
         )}
       </div>
-      
-      <QuickCapture isOfflineMode={isOfflineMode} onItemCreated={loadNotes} />
       
       {editingNote && (
         <Dialog open={!!editingNote} onOpenChange={() => setEditingNote(null)}>
