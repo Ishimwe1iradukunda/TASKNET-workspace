@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { SecondarySidebar } from './SecondarySidebar';
 import backend from '~backend/client';
 
 interface Wiki {
@@ -41,23 +41,24 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
 
   const loadWikis = async () => {
     try {
+      let loadedWikis: Wiki[];
       if (isOfflineMode) {
         const localWikis = LocalStorageManager.getWikis();
-        let filtered = localWikis;
-        
-        if (searchTerm) {
-          filtered = filtered.filter(wiki => 
-            wiki.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            wiki.content.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-        }
-        
-        setWikis(filtered);
+        loadedWikis = searchTerm
+          ? localWikis.filter(wiki => 
+              wiki.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              wiki.content.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+          : localWikis;
       } else {
         const response = await backend.workspace.listWikis({ 
           search: searchTerm || undefined 
         });
-        setWikis(response.wikis);
+        loadedWikis = response.wikis;
+      }
+      setWikis(loadedWikis);
+      if (loadedWikis.length > 0 && !selectedWiki) {
+        setSelectedWiki(loadedWikis[0]);
       }
     } catch (error) {
       console.error('Failed to load wikis:', error);
@@ -75,24 +76,23 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
     const tags = newWiki.tags.split(',').map(tag => tag.trim()).filter(Boolean);
     
     try {
+      let createdWiki: Wiki;
       if (isOfflineMode) {
-        const wiki = LocalStorageManager.createWiki({
+        createdWiki = LocalStorageManager.createWiki({
           title: newWiki.title,
           content: newWiki.content,
           tags,
           parentId: newWiki.parentId || undefined,
         });
-        setWikis(prev => [wiki, ...prev]);
       } else {
-        const wiki = await backend.workspace.createWiki({
+        createdWiki = await backend.workspace.createWiki({
           title: newWiki.title,
           content: newWiki.content,
           tags,
           parentId: newWiki.parentId || undefined,
         });
-        setWikis(prev => [wiki, ...prev]);
       }
-      
+      setWikis(prev => [createdWiki, ...prev]);
       setNewWiki({ title: '', content: '', tags: '', parentId: '' });
       setIsCreateDialogOpen(false);
       toast({
@@ -111,29 +111,25 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
 
   const updateWiki = async (wiki: Wiki) => {
     try {
+      let updated: Wiki;
       if (isOfflineMode) {
-        const updated = LocalStorageManager.updateWiki(wiki.id, {
+        updated = LocalStorageManager.updateWiki(wiki.id, {
           title: wiki.title,
           content: wiki.content,
           tags: wiki.tags,
         });
-        setWikis(prev => prev.map(w => w.id === wiki.id ? updated : w));
-        if (selectedWiki?.id === wiki.id) {
-          setSelectedWiki(updated);
-        }
       } else {
-        const updated = await backend.workspace.updateWiki({
+        updated = await backend.workspace.updateWiki({
           id: wiki.id,
           title: wiki.title,
           content: wiki.content,
           tags: wiki.tags,
         });
-        setWikis(prev => prev.map(w => w.id === wiki.id ? updated : w));
-        if (selectedWiki?.id === wiki.id) {
-          setSelectedWiki(updated);
-        }
       }
-      
+      setWikis(prev => prev.map(w => w.id === wiki.id ? updated : w));
+      if (selectedWiki?.id === wiki.id) {
+        setSelectedWiki(updated);
+      }
       setEditingWiki(null);
       toast({
         title: "Success",
@@ -153,16 +149,13 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
     try {
       if (isOfflineMode) {
         LocalStorageManager.deleteWiki(id);
-        setWikis(prev => prev.filter(w => w.id !== id));
       } else {
         await backend.workspace.deleteWiki({ id });
-        setWikis(prev => prev.filter(w => w.id !== id));
       }
-      
+      setWikis(prev => prev.filter(w => w.id !== id));
       if (selectedWiki?.id === id) {
         setSelectedWiki(null);
       }
-      
       toast({
         title: "Success",
         description: "Wiki page deleted successfully",
@@ -244,63 +237,10 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
 
   return (
     <div className="flex h-full">
-      {/* Wiki Tree Sidebar */}
-      <div className="w-80 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Wiki Pages</h3>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Create New Wiki Page</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Input
-                    placeholder="Page title"
-                    value={newWiki.title}
-                    onChange={(e) => setNewWiki(prev => ({ ...prev, title: e.target.value }))}
-                  />
-                  <select
-                    value={newWiki.parentId}
-                    onChange={(e) => setNewWiki(prev => ({ ...prev, parentId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background"
-                  >
-                    <option value="">Root level</option>
-                    {wikis.map(wiki => (
-                      <option key={wiki.id} value={wiki.id}>{wiki.title}</option>
-                    ))}
-                  </select>
-                  <Textarea
-                    placeholder="Page content... (Markdown supported)"
-                    rows={10}
-                    value={newWiki.content}
-                    onChange={(e) => setNewWiki(prev => ({ ...prev, content: e.target.value }))}
-                  />
-                  <Input
-                    placeholder="Tags (comma-separated)"
-                    value={newWiki.tags}
-                    onChange={(e) => setNewWiki(prev => ({ ...prev, tags: e.target.value }))}
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={createWiki} disabled={!newWiki.title.trim()}>
-                      Create Page
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      <SecondarySidebar title="Wiki Pages">
+        <div className="p-2">
+          <div className="relative mb-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search pages..."
               value={searchTerm}
@@ -308,11 +248,58 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
               className="pl-10"
             />
           </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                New Page
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create New Wiki Page</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Page title"
+                  value={newWiki.title}
+                  onChange={(e) => setNewWiki(prev => ({ ...prev, title: e.target.value }))}
+                />
+                <select
+                  value={newWiki.parentId}
+                  onChange={(e) => setNewWiki(prev => ({ ...prev, parentId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                >
+                  <option value="">Root level</option>
+                  {wikis.map(wiki => (
+                    <option key={wiki.id} value={wiki.id}>{wiki.title}</option>
+                  ))}
+                </select>
+                <Textarea
+                  placeholder="Page content... (Markdown supported)"
+                  rows={10}
+                  value={newWiki.content}
+                  onChange={(e) => setNewWiki(prev => ({ ...prev, content: e.target.value }))}
+                />
+                <Input
+                  placeholder="Tags (comma-separated)"
+                  value={newWiki.tags}
+                  onChange={(e) => setNewWiki(prev => ({ ...prev, tags: e.target.value }))}
+                />
+                <div className="flex gap-2">
+                  <Button onClick={createWiki} disabled={!newWiki.title.trim()}>
+                    Create Page
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
-        
         <div className="flex-1 overflow-auto p-2">
           {renderWikiTree(rootWikis)}
-          
           {wikis.length === 0 && (
             <div className="text-center py-8">
               <BookOpen className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
@@ -320,9 +307,8 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
             </div>
           )}
         </div>
-      </div>
+      </SecondarySidebar>
       
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {selectedWiki ? (
           <>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
 import { NotesView } from './components/NotesView';
 import { TasksView } from './components/TasksView';
 import { KanbanView } from './components/KanbanView';
@@ -17,6 +17,7 @@ import { EnterpriseSearchView } from './components/EnterpriseSearchView';
 import { DataManager } from './components/DataManager';
 import { DashboardView } from './components/DashboardView';
 import { ActivityFeedView } from './components/ActivityFeedView';
+import { QuickCapture } from './components/QuickCapture';
 import { LocalStorageManager } from './utils/localStorage';
 
 export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' | 'goals' | 'search' | 'data' | 'dashboard' | 'activity';
@@ -26,13 +27,35 @@ function App() {
   const [isOfflineMode, setIsOfflineMode] = useState(true);
 
   useEffect(() => {
-    // Initialize offline storage
     LocalStorageManager.init();
   }, []);
 
+  const renderView = () => {
+    switch (currentView) {
+      case 'dashboard': return <DashboardView isOfflineMode={isOfflineMode} />;
+      case 'activity': return <ActivityFeedView isOfflineMode={isOfflineMode} />;
+      case 'notes': return <NotesView isOfflineMode={isOfflineMode} />;
+      case 'tasks': return <TasksView isOfflineMode={isOfflineMode} />;
+      case 'kanban': return <KanbanView isOfflineMode={isOfflineMode} />;
+      case 'wikis': return <WikisView isOfflineMode={isOfflineMode} />;
+      case 'projects': return <ProjectsView isOfflineMode={isOfflineMode} />;
+      case 'email': return <EmailView isOfflineMode={isOfflineMode} />;
+      case 'calendar': return <CalendarView isOfflineMode={isOfflineMode} />;
+      case 'documents': return <DocumentsView isOfflineMode={isOfflineMode} />;
+      case 'pdf-tools': return <PdfToolsView isOfflineMode={isOfflineMode} />;
+      case 'time-tracking': return <TimeTrackingView isOfflineMode={isOfflineMode} />;
+      case 'portfolios': return <PortfoliosView isOfflineMode={isOfflineMode} />;
+      case 'sprints': return <SprintsView isOfflineMode={isOfflineMode} />;
+      case 'goals': return <GoalsView isOfflineMode={isOfflineMode} />;
+      case 'search': return <EnterpriseSearchView isOfflineMode={isOfflineMode} />;
+      case 'data': return <DataManager isOfflineMode={isOfflineMode} />;
+      default: return <DashboardView isOfflineMode={isOfflineMode} />;
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      <Sidebar 
+    <div className="flex flex-col h-screen bg-background text-foreground">
+      <Header 
         currentView={currentView} 
         onViewChange={setCurrentView}
         isOfflineMode={isOfflineMode}
@@ -40,24 +63,10 @@ function App() {
       />
       
       <main className="flex-1 overflow-hidden">
-        {currentView === 'dashboard' && <DashboardView isOfflineMode={isOfflineMode} />}
-        {currentView === 'activity' && <ActivityFeedView isOfflineMode={isOfflineMode} />}
-        {currentView === 'notes' && <NotesView isOfflineMode={isOfflineMode} />}
-        {currentView === 'tasks' && <TasksView isOfflineMode={isOfflineMode} />}
-        {currentView === 'kanban' && <KanbanView isOfflineMode={isOfflineMode} />}
-        {currentView === 'wikis' && <WikisView isOfflineMode={isOfflineMode} />}
-        {currentView === 'projects' && <ProjectsView isOfflineMode={isOfflineMode} />}
-        {currentView === 'email' && <EmailView isOfflineMode={isOfflineMode} />}
-        {currentView === 'calendar' && <CalendarView isOfflineMode={isOfflineMode} />}
-        {currentView === 'documents' && <DocumentsView isOfflineMode={isOfflineMode} />}
-        {currentView === 'pdf-tools' && <PdfToolsView isOfflineMode={isOfflineMode} />}
-        {currentView === 'time-tracking' && <TimeTrackingView isOfflineMode={isOfflineMode} />}
-        {currentView === 'portfolios' && <PortfoliosView isOfflineMode={isOfflineMode} />}
-        {currentView === 'sprints' && <SprintsView isOfflineMode={isOfflineMode} />}
-        {currentView === 'goals' && <GoalsView isOfflineMode={isOfflineMode} />}
-        {currentView === 'search' && <EnterpriseSearchView isOfflineMode={isOfflineMode} />}
-        {currentView === 'data' && <DataManager isOfflineMode={isOfflineMode} />}
+        {renderView()}
       </main>
+
+      <QuickCapture isOfflineMode={isOfflineMode} />
     </div>
   );
 }
