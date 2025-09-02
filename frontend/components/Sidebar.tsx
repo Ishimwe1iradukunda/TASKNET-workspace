@@ -24,7 +24,7 @@ export function Sidebar({ currentView, onViewChange, isOfflineMode, onOfflineMod
   return (
     <div className="w-80 bg-muted border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-bold mb-1">Workspace</h1>
+        <h1 className="text-2xl font-bold mb-1">TaskNetWorkspace</h1>
         <p className="text-sm text-muted-foreground">Local-first productivity suite</p>
       </div>
       

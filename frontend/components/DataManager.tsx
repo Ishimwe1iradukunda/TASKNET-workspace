@@ -38,7 +38,7 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `workspace-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `tasknetworkspace-export-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -212,7 +212,7 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
       <div className="p-6 border-b border-border">
         <h2 className="text-2xl font-bold mb-2">Data Management</h2>
         <p className="text-muted-foreground">
-          Export, import, and sync your workspace data
+          Export, import, and sync your TaskNetWorkspace data
         </p>
       </div>
       

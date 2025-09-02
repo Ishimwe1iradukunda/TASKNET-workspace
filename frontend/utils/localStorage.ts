@@ -23,10 +23,10 @@ interface Project {
 }
 
 export class LocalStorageManager {
-  private static readonly NOTES_KEY = 'workspace_notes';
-  private static readonly TASKS_KEY = 'workspace_tasks';
-  private static readonly WIKIS_KEY = 'workspace_wikis';
-  private static readonly PROJECTS_KEY = 'workspace_projects';
+  private static readonly NOTES_KEY = 'tasknetworkspace_notes';
+  private static readonly TASKS_KEY = 'tasknetworkspace_tasks';
+  private static readonly WIKIS_KEY = 'tasknetworkspace_wikis';
+  private static readonly PROJECTS_KEY = 'tasknetworkspace_projects';
 
   static init() {
     // Initialize storage if not exists

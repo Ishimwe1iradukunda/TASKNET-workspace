@@ -28,7 +28,7 @@ export const chat = api<ChatRequest, ChatResponse>(
           messages: [
             {
               role: "system",
-              content: "You are a helpful AI assistant for a Notion-like workspace app. Help users with writing, organizing, and automating their work. Be concise and practical."
+              content: "You are a helpful AI assistant for TaskNetWorkspace, a local-first productivity app. Help users with writing, organizing, and automating their work. Be concise and practical."
             },
             {
               role: "user",
