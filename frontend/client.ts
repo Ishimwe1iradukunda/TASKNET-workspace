@@ -33,6 +33,8 @@ const BROWSER = typeof globalThis === "object" && ("window" in globalThis);
  * Client is an API client for the  Encore application.
  */
 export class Client {
+    public readonly chat: chat.ServiceClient
+    public readonly reminders: reminders.ServiceClient
     public readonly workspace: workspace.ServiceClient
     private readonly options: ClientOptions
     private readonly target: string
@@ -48,6 +50,8 @@ export class Client {
         this.target = target
         this.options = options ?? {}
         const base = new BaseClient(this.target, this.options)
+        this.chat = new chat.ServiceClient(base)
+        this.reminders = new reminders.ServiceClient(base)
         this.workspace = new workspace.ServiceClient(base)
     }
 
@@ -77,6 +81,81 @@ export interface ClientOptions {
 
     /** Default RequestInit to be used for the client */
     requestInit?: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
+}
+
+/**
+ * Import the endpoint handlers to derive the types for the client.
+ */
+import { chat as api_chat_chat_chat } from "~backend/chat/chat";
+
+export namespace chat {
+
+    export class ServiceClient {
+        private baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.chat = this.chat.bind(this)
+        }
+
+        /**
+         * chat is a bidirectional streaming API for real-time chat in projects.
+         */
+        public async chat(params: RequestType<typeof api_chat_chat_chat>): Promise<StreamInOut<StreamRequest<typeof api_chat_chat_chat>, StreamResponse<typeof api_chat_chat_chat>>> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                projectId: params.projectId,
+            })
+
+            return await this.baseClient.createStreamInOut(`/chat`, {query})
+        }
+    }
+}
+
+/**
+ * Import the endpoint handlers to derive the types for the client.
+ */
+import { createReminder as api_reminders_create_createReminder } from "~backend/reminders/create";
+import { deleteReminder as api_reminders_delete_deleteReminder } from "~backend/reminders/delete";
+import { listReminders as api_reminders_list_listReminders } from "~backend/reminders/list";
+
+export namespace reminders {
+
+    export class ServiceClient {
+        private baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.createReminder = this.createReminder.bind(this)
+            this.deleteReminder = this.deleteReminder.bind(this)
+            this.listReminders = this.listReminders.bind(this)
+        }
+
+        /**
+         * Creates a new reminder.
+         */
+        public async createReminder(params: RequestType<typeof api_reminders_create_createReminder>): Promise<ResponseType<typeof api_reminders_create_createReminder>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/reminders`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_reminders_create_createReminder>
+        }
+
+        /**
+         * Deletes a reminder.
+         */
+        public async deleteReminder(params: { id: string }): Promise<void> {
+            await this.baseClient.callTypedAPI(`/reminders/${encodeURIComponent(params.id)}`, {method: "DELETE", body: undefined})
+        }
+
+        /**
+         * Retrieves all reminders.
+         */
+        public async listReminders(): Promise<ResponseType<typeof api_reminders_list_listReminders>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/reminders`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_reminders_list_listReminders>
+        }
+    }
 }
 
 /**

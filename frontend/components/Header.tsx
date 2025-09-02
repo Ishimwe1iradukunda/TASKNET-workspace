@@ -25,7 +25,6 @@ import {
   Sun,
   Moon,
   Search,
-  Palette,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ViewType } from '../App';
-import { useTheme, type Accent } from '../theme';
+import { useTheme } from '../theme';
 
 interface HeaderProps {
   currentView: ViewType;
@@ -48,7 +47,7 @@ interface HeaderProps {
 }
 
 export function Header({ currentView, onViewChange, isOfflineMode, onOfflineModeToggle, onOpenCommandPalette }: HeaderProps) {
-  const { mode, setMode, accent, setAccent } = useTheme();
+  const { mode, setMode } = useTheme();
 
   const mainNavItems = [
     { id: 'dashboard' as ViewType, icon: BarChart3, label: 'Dashboard' },
@@ -102,16 +101,6 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
       </DropdownMenuContent>
     </DropdownMenu>
   );
-
-  const accents: { id: Accent; name: string }[] = [
-    { id: "violet", name: "Violet" },
-    { id: "blue", name: "Blue" },
-    { id: "teal", name: "Teal" },
-    { id: "emerald", name: "Emerald" },
-    { id: "amber", name: "Amber" },
-    { id: "rose", name: "Rose" },
-    { id: "pink", name: "Pink" },
-  ];
 
   return (
     <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shrink-0 transition-colors">
@@ -171,28 +160,6 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
             <DropdownMenuItem onClick={() => setMode('system')} className="flex items-center gap-2">
               <Settings className="w-4 h-4" /> System
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="flex items-center gap-2">
-              <Palette className="w-4 h-4" /> Accent
-            </DropdownMenuLabel>
-            {accents.map(a => (
-              <DropdownMenuItem
-                key={a.id}
-                className="flex items-center gap-2"
-                onClick={() => setAccent(a.id)}
-              >
-                <span
-                  className="inline-block w-3 h-3 rounded-full"
-                  style={{
-                    // purely visual indicator; CSS variable is already set in provider
-                    backgroundColor: 'hsl(var(--primary))',
-                    outline: accent === a.id ? '2px solid hsl(var(--primary))' : 'none'
-                  }}
-                />
-                <span className="capitalize">{a.name}</span>
-                {accent === a.id && <span className="ml-auto text-xs text-muted-foreground">Selected</span>}
-              </DropdownMenuItem>
-            ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -216,7 +183,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Settings & Tools</DropdownMenuLabel>
+            <DropdownMenuLabel>Settings &amp; Tools</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {settingsItems.map(item => (
               <DropdownMenuItem key={item.id} onClick={() => onViewChange(item.id)} className="flex items-center gap-2">
