@@ -1,9 +1,32 @@
 import type { Note } from '~backend/workspace/notes/create';
 import type { Task } from '~backend/workspace/tasks/create';
 
+interface Wiki {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  parentId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  status: "active" | "paused" | "completed" | "archived";
+  startDate?: Date;
+  endDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class LocalStorageManager {
   private static readonly NOTES_KEY = 'workspace_notes';
   private static readonly TASKS_KEY = 'workspace_tasks';
+  private static readonly WIKIS_KEY = 'workspace_wikis';
+  private static readonly PROJECTS_KEY = 'workspace_projects';
 
   static init() {
     // Initialize storage if not exists
@@ -12,6 +35,12 @@ export class LocalStorageManager {
     }
     if (!localStorage.getItem(this.TASKS_KEY)) {
       localStorage.setItem(this.TASKS_KEY, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(this.WIKIS_KEY)) {
+      localStorage.setItem(this.WIKIS_KEY, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(this.PROJECTS_KEY)) {
+      localStorage.setItem(this.PROJECTS_KEY, JSON.stringify([]));
     }
   }
 
@@ -187,16 +216,161 @@ export class LocalStorageManager {
     }
   }
 
+  // Wikis management
+  static getWikis(): Wiki[] {
+    try {
+      const data = localStorage.getItem(this.WIKIS_KEY);
+      const wikis = data ? JSON.parse(data) : [];
+      return wikis.map((wiki: any) => ({
+        ...wiki,
+        createdAt: new Date(wiki.createdAt),
+        updatedAt: new Date(wiki.updatedAt),
+      }));
+    } catch (error) {
+      console.error('Failed to load wikis from localStorage:', error);
+      return [];
+    }
+  }
+
+  static saveWikis(wikis: Wiki[]) {
+    try {
+      localStorage.setItem(this.WIKIS_KEY, JSON.stringify(wikis));
+    } catch (error) {
+      console.error('Failed to save wikis to localStorage:', error);
+    }
+  }
+
+  static createWiki(data: { title: string; content: string; tags: string[]; parentId?: string }): Wiki {
+    const wikis = this.getWikis();
+    const wiki: Wiki = {
+      id: crypto.randomUUID(),
+      title: data.title,
+      content: data.content,
+      tags: data.tags,
+      parentId: data.parentId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    wikis.unshift(wiki);
+    this.saveWikis(wikis);
+    return wiki;
+  }
+
+  static updateWiki(id: string, updates: Partial<Omit<Wiki, 'id' | 'createdAt' | 'updatedAt' | 'parentId'>>): Wiki {
+    const wikis = this.getWikis();
+    const index = wikis.findIndex(wiki => wiki.id === id);
+    
+    if (index === -1) {
+      throw new Error('Wiki not found');
+    }
+    
+    const updatedWiki = {
+      ...wikis[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    wikis[index] = updatedWiki;
+    this.saveWikis(wikis);
+    return updatedWiki;
+  }
+
+  static deleteWiki(id: string) {
+    const wikis = this.getWikis();
+    const filtered = wikis.filter(wiki => wiki.id !== id);
+    this.saveWikis(filtered);
+  }
+
+  // Projects management
+  static getProjects(): Project[] {
+    try {
+      const data = localStorage.getItem(this.PROJECTS_KEY);
+      const projects = data ? JSON.parse(data) : [];
+      return projects.map((project: any) => ({
+        ...project,
+        createdAt: new Date(project.createdAt),
+        updatedAt: new Date(project.updatedAt),
+        startDate: project.startDate ? new Date(project.startDate) : undefined,
+        endDate: project.endDate ? new Date(project.endDate) : undefined,
+      }));
+    } catch (error) {
+      console.error('Failed to load projects from localStorage:', error);
+      return [];
+    }
+  }
+
+  static saveProjects(projects: Project[]) {
+    try {
+      localStorage.setItem(this.PROJECTS_KEY, JSON.stringify(projects));
+    } catch (error) {
+      console.error('Failed to save projects to localStorage:', error);
+    }
+  }
+
+  static createProject(data: {
+    name: string;
+    description?: string;
+    status?: "active" | "paused" | "completed" | "archived";
+    startDate?: Date;
+    endDate?: Date;
+  }): Project {
+    const projects = this.getProjects();
+    const project: Project = {
+      id: crypto.randomUUID(),
+      name: data.name,
+      description: data.description,
+      status: data.status || "active",
+      startDate: data.startDate,
+      endDate: data.endDate,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    projects.unshift(project);
+    this.saveProjects(projects);
+    return project;
+  }
+
+  static updateProject(id: string, updates: Partial<Omit<Project, 'id' | 'createdAt' | 'updatedAt'>>): Project {
+    const projects = this.getProjects();
+    const index = projects.findIndex(project => project.id === id);
+    
+    if (index === -1) {
+      throw new Error('Project not found');
+    }
+    
+    const updatedProject = {
+      ...projects[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    projects[index] = updatedProject;
+    this.saveProjects(projects);
+    return updatedProject;
+  }
+
+  static deleteProject(id: string) {
+    const projects = this.getProjects();
+    const filtered = projects.filter(project => project.id !== id);
+    this.saveProjects(filtered);
+  }
+
   // General utilities
   static clearAll() {
     localStorage.removeItem(this.NOTES_KEY);
     localStorage.removeItem(this.TASKS_KEY);
+    localStorage.removeItem(this.WIKIS_KEY);
+    localStorage.removeItem(this.PROJECTS_KEY);
     this.init();
   }
 
   static getStorageSize(): number {
     const notes = localStorage.getItem(this.NOTES_KEY) || '';
     const tasks = localStorage.getItem(this.TASKS_KEY) || '';
-    return new Blob([notes + tasks]).size;
+    const wikis = localStorage.getItem(this.WIKIS_KEY) || '';
+    const projects = localStorage.getItem(this.PROJECTS_KEY) || '';
+    return new Blob([notes + tasks + wikis + projects]).size;
   }
 }

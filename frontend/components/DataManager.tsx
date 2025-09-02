@@ -26,6 +26,8 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
         data = {
           notes: LocalStorageManager.getNotes(),
           tasks: LocalStorageManager.getTasks(),
+          wikis: LocalStorageManager.getWikis(),
+          projects: LocalStorageManager.getProjects(),
           exportedAt: new Date(),
         };
       } else {
@@ -73,6 +75,27 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
         }
         if (data.tasks) {
           LocalStorageManager.importTasks(data.tasks);
+        }
+        if (data.wikis) {
+          data.wikis.forEach((wiki: any) => {
+            LocalStorageManager.createWiki({
+              title: wiki.title,
+              content: wiki.content,
+              tags: wiki.tags || [],
+              parentId: wiki.parentId,
+            });
+          });
+        }
+        if (data.projects) {
+          data.projects.forEach((project: any) => {
+            LocalStorageManager.createProject({
+              name: project.name,
+              description: project.description,
+              status: project.status || "active",
+              startDate: project.startDate ? new Date(project.startDate) : undefined,
+              endDate: project.endDate ? new Date(project.endDate) : undefined,
+            });
+          });
         }
       } else {
         await backend.workspace.importData({
@@ -171,10 +194,14 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
   const getStorageStats = () => {
     const notes = LocalStorageManager.getNotes();
     const tasks = LocalStorageManager.getTasks();
+    const wikis = LocalStorageManager.getWikis();
+    const projects = LocalStorageManager.getProjects();
     return {
       notes: notes.length,
       tasks: tasks.length,
-      totalSize: new Blob([JSON.stringify({ notes, tasks })]).size,
+      wikis: wikis.length,
+      projects: projects.length,
+      totalSize: new Blob([JSON.stringify({ notes, tasks, wikis, projects })]).size,
     };
   };
 
@@ -214,6 +241,14 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
               <span className="font-medium">{stats.tasks}</span>
             </div>
             <div className="flex justify-between">
+              <span>Wiki Pages:</span>
+              <span className="font-medium">{stats.wikis}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Projects:</span>
+              <span className="font-medium">{stats.projects}</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t">
               <span>Total size:</span>
               <span className="font-medium">{(stats.totalSize / 1024).toFixed(1)} KB</span>
             </div>
