@@ -15,12 +15,14 @@ import { SprintsView } from './components/SprintsView';
 import { GoalsView } from './components/GoalsView';
 import { EnterpriseSearchView } from './components/EnterpriseSearchView';
 import { DataManager } from './components/DataManager';
+import { DashboardView } from './components/DashboardView';
+import { ActivityFeedView } from './components/ActivityFeedView';
 import { LocalStorageManager } from './utils/localStorage';
 
-export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' | 'goals' | 'search' | 'data';
+export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' | 'goals' | 'search' | 'data' | 'dashboard' | 'activity';
 
 function App() {
-  const [currentView, setCurrentView] = useState<ViewType>('notes');
+  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isOfflineMode, setIsOfflineMode] = useState(true);
 
   useEffect(() => {
@@ -38,6 +40,8 @@ function App() {
       />
       
       <main className="flex-1 overflow-hidden">
+        {currentView === 'dashboard' && <DashboardView isOfflineMode={isOfflineMode} />}
+        {currentView === 'activity' && <ActivityFeedView isOfflineMode={isOfflineMode} />}
         {currentView === 'notes' && <NotesView isOfflineMode={isOfflineMode} />}
         {currentView === 'tasks' && <TasksView isOfflineMode={isOfflineMode} />}
         {currentView === 'kanban' && <KanbanView isOfflineMode={isOfflineMode} />}
