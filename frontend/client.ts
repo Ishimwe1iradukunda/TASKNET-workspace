@@ -82,6 +82,10 @@ export interface ClientOptions {
 /**
  * Import the endpoint handlers to derive the types for the client.
  */
+import { createAutomation as api_workspace_create_createAutomation } from "~backend/automations/create";
+import { listAutomations as api_workspace_list_listAutomations } from "~backend/automations/list";
+import { createCustomField as api_workspace_create_createCustomField } from "~backend/custom-fields/create";
+import { listCustomFields as api_workspace_list_listCustomFields } from "~backend/custom-fields/list";
 import { exportData as api_workspace_export_exportData } from "~backend/data/export";
 import { importData as api_workspace_import_importData } from "~backend/data/import";
 import { deleteDocument as api_workspace_delete_deleteDocument } from "~backend/documents/delete";
@@ -91,19 +95,40 @@ import { getUploadUrl as api_workspace_upload_url_getUploadUrl } from "~backend/
 import { deleteEmail as api_workspace_delete_deleteEmail } from "~backend/emails/delete";
 import { listEmails as api_workspace_list_listEmails } from "~backend/emails/list";
 import { updateEmail as api_workspace_update_updateEmail } from "~backend/emails/update";
+import { createForm as api_workspace_create_createForm } from "~backend/forms/create";
+import { listForms as api_workspace_list_listForms } from "~backend/forms/list";
+import { createGoal as api_workspace_create_createGoal } from "~backend/goals/create";
+import { listGoals as api_workspace_list_listGoals } from "~backend/goals/list";
 import { createNote as api_workspace_create_createNote } from "~backend/notes/create";
 import { deleteNote as api_workspace_delete_deleteNote } from "~backend/notes/delete";
 import { getNote as api_workspace_get_getNote } from "~backend/notes/get";
 import { listNotes as api_workspace_list_listNotes } from "~backend/notes/list";
 import { updateNote as api_workspace_update_updateNote } from "~backend/notes/update";
+import { compressPdf as api_workspace_compress_compressPdf } from "~backend/pdf/compress";
+import {
+    convertImageToPdf as api_workspace_convert_convertImageToPdf,
+    convertPdfToImages as api_workspace_convert_convertPdfToImages
+} from "~backend/pdf/convert";
+import { mergePdf as api_workspace_merge_mergePdf } from "~backend/pdf/merge";
+import { splitPdf as api_workspace_split_splitPdf } from "~backend/pdf/split";
+import { createPortfolio as api_workspace_create_createPortfolio } from "~backend/portfolios/create";
+import { listPortfolios as api_workspace_list_listPortfolios } from "~backend/portfolios/list";
 import { createProject as api_workspace_create_createProject } from "~backend/projects/create";
 import { deleteProject as api_workspace_delete_deleteProject } from "~backend/projects/delete";
 import { listProjects as api_workspace_list_listProjects } from "~backend/projects/list";
 import { updateProject as api_workspace_update_updateProject } from "~backend/projects/update";
+import { enterpriseSearch as api_workspace_enterprise_enterpriseSearch } from "~backend/search/enterprise";
+import { createSprint as api_workspace_create_createSprint } from "~backend/sprints/create";
+import { listSprints as api_workspace_list_listSprints } from "~backend/sprints/list";
 import { createTask as api_workspace_create_createTask } from "~backend/tasks/create";
 import { deleteTask as api_workspace_delete_deleteTask } from "~backend/tasks/delete";
 import { listTasks as api_workspace_list_listTasks } from "~backend/tasks/list";
 import { updateTask as api_workspace_update_updateTask } from "~backend/tasks/update";
+import {
+    listTimeEntries as api_workspace_tracking_listTimeEntries,
+    startTimeEntry as api_workspace_tracking_startTimeEntry,
+    stopTimeEntry as api_workspace_tracking_stopTimeEntry
+} from "~backend/time/tracking";
 import { createWiki as api_workspace_create_createWiki } from "~backend/wikis/create";
 import { deleteWiki as api_workspace_delete_deleteWiki } from "~backend/wikis/delete";
 import { listWikis as api_workspace_list_listWikis } from "~backend/wikis/list";
@@ -116,8 +141,17 @@ export namespace workspace {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.compressPdf = this.compressPdf.bind(this)
+            this.convertImageToPdf = this.convertImageToPdf.bind(this)
+            this.convertPdfToImages = this.convertPdfToImages.bind(this)
+            this.createAutomation = this.createAutomation.bind(this)
+            this.createCustomField = this.createCustomField.bind(this)
+            this.createForm = this.createForm.bind(this)
+            this.createGoal = this.createGoal.bind(this)
             this.createNote = this.createNote.bind(this)
+            this.createPortfolio = this.createPortfolio.bind(this)
             this.createProject = this.createProject.bind(this)
+            this.createSprint = this.createSprint.bind(this)
             this.createTask = this.createTask.bind(this)
             this.createWiki = this.createWiki.bind(this)
             this.deleteDocument = this.deleteDocument.bind(this)
@@ -126,22 +160,97 @@ export namespace workspace {
             this.deleteProject = this.deleteProject.bind(this)
             this.deleteTask = this.deleteTask.bind(this)
             this.deleteWiki = this.deleteWiki.bind(this)
+            this.enterpriseSearch = this.enterpriseSearch.bind(this)
             this.exportData = this.exportData.bind(this)
             this.getDocument = this.getDocument.bind(this)
             this.getNote = this.getNote.bind(this)
             this.getUploadUrl = this.getUploadUrl.bind(this)
             this.importData = this.importData.bind(this)
+            this.listAutomations = this.listAutomations.bind(this)
+            this.listCustomFields = this.listCustomFields.bind(this)
             this.listDocuments = this.listDocuments.bind(this)
             this.listEmails = this.listEmails.bind(this)
+            this.listForms = this.listForms.bind(this)
+            this.listGoals = this.listGoals.bind(this)
             this.listNotes = this.listNotes.bind(this)
+            this.listPortfolios = this.listPortfolios.bind(this)
             this.listProjects = this.listProjects.bind(this)
+            this.listSprints = this.listSprints.bind(this)
             this.listTasks = this.listTasks.bind(this)
+            this.listTimeEntries = this.listTimeEntries.bind(this)
             this.listWikis = this.listWikis.bind(this)
+            this.mergePdf = this.mergePdf.bind(this)
+            this.splitPdf = this.splitPdf.bind(this)
+            this.startTimeEntry = this.startTimeEntry.bind(this)
+            this.stopTimeEntry = this.stopTimeEntry.bind(this)
             this.updateEmail = this.updateEmail.bind(this)
             this.updateNote = this.updateNote.bind(this)
             this.updateProject = this.updateProject.bind(this)
             this.updateTask = this.updateTask.bind(this)
             this.updateWiki = this.updateWiki.bind(this)
+        }
+
+        /**
+         * Compresses a PDF file to reduce its size.
+         */
+        public async compressPdf(params: RequestType<typeof api_workspace_compress_compressPdf>): Promise<ResponseType<typeof api_workspace_compress_compressPdf>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/pdf/compress`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_compress_compressPdf>
+        }
+
+        /**
+         * Converts multiple images to a single PDF.
+         */
+        public async convertImageToPdf(params: RequestType<typeof api_workspace_convert_convertImageToPdf>): Promise<ResponseType<typeof api_workspace_convert_convertImageToPdf>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/pdf/convert/images-to-pdf`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_convert_convertImageToPdf>
+        }
+
+        /**
+         * Converts a PDF to individual images.
+         */
+        public async convertPdfToImages(params: RequestType<typeof api_workspace_convert_convertPdfToImages>): Promise<ResponseType<typeof api_workspace_convert_convertPdfToImages>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/pdf/convert/pdf-to-images`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_convert_convertPdfToImages>
+        }
+
+        /**
+         * Creates a new automation rule.
+         */
+        public async createAutomation(params: RequestType<typeof api_workspace_create_createAutomation>): Promise<ResponseType<typeof api_workspace_create_createAutomation>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/automations`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_create_createAutomation>
+        }
+
+        /**
+         * Creates a new custom field.
+         */
+        public async createCustomField(params: RequestType<typeof api_workspace_create_createCustomField>): Promise<ResponseType<typeof api_workspace_create_createCustomField>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/custom-fields`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_create_createCustomField>
+        }
+
+        /**
+         * Creates a new form.
+         */
+        public async createForm(params: RequestType<typeof api_workspace_create_createForm>): Promise<ResponseType<typeof api_workspace_create_createForm>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/forms`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_create_createForm>
+        }
+
+        /**
+         * Creates a new goal.
+         */
+        public async createGoal(params: RequestType<typeof api_workspace_create_createGoal>): Promise<ResponseType<typeof api_workspace_create_createGoal>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/goals`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_create_createGoal>
         }
 
         /**
@@ -154,12 +263,30 @@ export namespace workspace {
         }
 
         /**
+         * Creates a new portfolio.
+         */
+        public async createPortfolio(params: RequestType<typeof api_workspace_create_createPortfolio>): Promise<ResponseType<typeof api_workspace_create_createPortfolio>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/portfolios`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_create_createPortfolio>
+        }
+
+        /**
          * Creates a new project.
          */
         public async createProject(params: RequestType<typeof api_workspace_create_createProject>): Promise<ResponseType<typeof api_workspace_create_createProject>> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/projects`, {method: "POST", body: JSON.stringify(params)})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_create_createProject>
+        }
+
+        /**
+         * Creates a new sprint.
+         */
+        public async createSprint(params: RequestType<typeof api_workspace_create_createSprint>): Promise<ResponseType<typeof api_workspace_create_createSprint>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/sprints`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_create_createSprint>
         }
 
         /**
@@ -223,6 +350,22 @@ export namespace workspace {
         }
 
         /**
+         * Performs enterprise search across all content types.
+         */
+        public async enterpriseSearch(params: RequestType<typeof api_workspace_enterprise_enterpriseSearch>): Promise<ResponseType<typeof api_workspace_enterprise_enterpriseSearch>> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                limit: params.limit === undefined ? undefined : String(params.limit),
+                query: params.query,
+                type:  params.type === undefined ? undefined : String(params.type),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/search`, {query, method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_enterprise_enterpriseSearch>
+        }
+
+        /**
          * Exports all workspace data as JSON.
          */
         public async exportData(): Promise<ResponseType<typeof api_workspace_export_exportData>> {
@@ -268,6 +411,29 @@ export namespace workspace {
         }
 
         /**
+         * Retrieves all automation rules.
+         */
+        public async listAutomations(): Promise<ResponseType<typeof api_workspace_list_listAutomations>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/automations`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listAutomations>
+        }
+
+        /**
+         * Retrieves custom fields with optional filters.
+         */
+        public async listCustomFields(params: RequestType<typeof api_workspace_list_listCustomFields>): Promise<ResponseType<typeof api_workspace_list_listCustomFields>> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                entityType: params.entityType === undefined ? undefined : String(params.entityType),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/custom-fields`, {query, method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listCustomFields>
+        }
+
+        /**
          * Retrieves all documents.
          */
         public async listDocuments(): Promise<ResponseType<typeof api_workspace_list_listDocuments>> {
@@ -286,6 +452,30 @@ export namespace workspace {
         }
 
         /**
+         * Retrieves all forms.
+         */
+        public async listForms(): Promise<ResponseType<typeof api_workspace_list_listForms>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/forms`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listForms>
+        }
+
+        /**
+         * Retrieves goals with optional filters.
+         */
+        public async listGoals(params: RequestType<typeof api_workspace_list_listGoals>): Promise<ResponseType<typeof api_workspace_list_listGoals>> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                projectId: params.projectId,
+                status:    params.status === undefined ? undefined : String(params.status),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/goals`, {query, method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listGoals>
+        }
+
+        /**
          * Retrieves all notes, optionally filtered by search term or tag.
          */
         public async listNotes(params: RequestType<typeof api_workspace_list_listNotes>): Promise<ResponseType<typeof api_workspace_list_listNotes>> {
@@ -301,6 +491,15 @@ export namespace workspace {
         }
 
         /**
+         * Retrieves all portfolios.
+         */
+        public async listPortfolios(): Promise<ResponseType<typeof api_workspace_list_listPortfolios>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/portfolios`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listPortfolios>
+        }
+
+        /**
          * Retrieves all projects, optionally filtered by status.
          */
         public async listProjects(params: RequestType<typeof api_workspace_list_listProjects>): Promise<ResponseType<typeof api_workspace_list_listProjects>> {
@@ -312,6 +511,21 @@ export namespace workspace {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/projects`, {query, method: "GET", body: undefined})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listProjects>
+        }
+
+        /**
+         * Retrieves sprints with optional filters.
+         */
+        public async listSprints(params: RequestType<typeof api_workspace_list_listSprints>): Promise<ResponseType<typeof api_workspace_list_listSprints>> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                projectId: params.projectId,
+                status:    params.status === undefined ? undefined : String(params.status),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/sprints`, {query, method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listSprints>
         }
 
         /**
@@ -330,6 +544,23 @@ export namespace workspace {
         }
 
         /**
+         * Lists time entries with optional filters.
+         */
+        public async listTimeEntries(params: RequestType<typeof api_workspace_tracking_listTimeEntries>): Promise<ResponseType<typeof api_workspace_tracking_listTimeEntries>> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                endDate:   params.endDate === undefined ? undefined : params.endDate.toISOString(),
+                projectId: params.projectId,
+                startDate: params.startDate === undefined ? undefined : params.startDate.toISOString(),
+                taskId:    params.taskId,
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/time/entries`, {query, method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_tracking_listTimeEntries>
+        }
+
+        /**
          * Retrieves all wiki pages, optionally filtered by parent or search term.
          */
         public async listWikis(params: RequestType<typeof api_workspace_list_listWikis>): Promise<ResponseType<typeof api_workspace_list_listWikis>> {
@@ -342,6 +573,49 @@ export namespace workspace {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/wikis`, {query, method: "GET", body: undefined})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listWikis>
+        }
+
+        /**
+         * Merges multiple PDF files into a single PDF.
+         */
+        public async mergePdf(params: RequestType<typeof api_workspace_merge_mergePdf>): Promise<ResponseType<typeof api_workspace_merge_mergePdf>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/pdf/merge`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_merge_mergePdf>
+        }
+
+        /**
+         * Splits a PDF into multiple files based on specified pages or ranges.
+         */
+        public async splitPdf(params: RequestType<typeof api_workspace_split_splitPdf>): Promise<ResponseType<typeof api_workspace_split_splitPdf>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/pdf/split`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_split_splitPdf>
+        }
+
+        /**
+         * Starts a new time tracking entry.
+         */
+        public async startTimeEntry(params: RequestType<typeof api_workspace_tracking_startTimeEntry>): Promise<ResponseType<typeof api_workspace_tracking_startTimeEntry>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/time/start`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_tracking_startTimeEntry>
+        }
+
+        /**
+         * Stops a running time entry.
+         */
+        public async stopTimeEntry(params: RequestType<typeof api_workspace_tracking_stopTimeEntry>): Promise<ResponseType<typeof api_workspace_tracking_stopTimeEntry>> {
+            // Construct the body with only the fields which we want encoded within the body (excluding query string or header fields)
+            const body: Record<string, any> = {
+                description: params.description,
+                duration:    params.duration,
+                endTime:     params.endTime,
+            }
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/time/stop/${encodeURIComponent(params.id)}`, {method: "PUT", body: JSON.stringify(body)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_tracking_stopTimeEntry>
         }
 
         /**

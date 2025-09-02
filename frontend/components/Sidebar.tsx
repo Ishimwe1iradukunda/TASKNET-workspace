@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, CheckSquare, Columns3, BookOpen, FolderOpen, Mail, Calendar, FileArchive, Database, Wifi, WifiOff } from 'lucide-react';
+import { FileText, CheckSquare, Columns3, BookOpen, FolderOpen, Mail, Calendar, FileArchive, FileImage, Database, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ViewType } from '../App';
 
@@ -20,6 +20,7 @@ export function Sidebar({ currentView, onViewChange, isOfflineMode, onOfflineMod
     { id: 'email' as ViewType, icon: Mail, label: 'Email', description: 'Connect your inbox' },
     { id: 'calendar' as ViewType, icon: Calendar, label: 'Calendar', description: 'Schedule your time' },
     { id: 'documents' as ViewType, icon: FileArchive, label: 'Documents', description: 'Store your files' },
+    { id: 'pdf-tools' as ViewType, icon: FileImage, label: 'PDF Tools', description: 'Convert & compress' },
     { id: 'data' as ViewType, icon: Database, label: 'Data', description: 'Export & sync' },
   ];
 

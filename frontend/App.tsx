@@ -8,10 +8,11 @@ import { ProjectsView } from './components/ProjectsView';
 import { EmailView } from './components/EmailView';
 import { CalendarView } from './components/CalendarView';
 import { DocumentsView } from './components/DocumentsView';
+import { PdfToolsView } from './components/PdfToolsView';
 import { DataManager } from './components/DataManager';
 import { LocalStorageManager } from './utils/localStorage';
 
-export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'data';
+export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'pdf-tools' | 'data';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('notes');
@@ -40,6 +41,7 @@ function App() {
         {currentView === 'email' && <EmailView isOfflineMode={isOfflineMode} />}
         {currentView === 'calendar' && <CalendarView isOfflineMode={isOfflineMode} />}
         {currentView === 'documents' && <DocumentsView isOfflineMode={isOfflineMode} />}
+        {currentView === 'pdf-tools' && <PdfToolsView isOfflineMode={isOfflineMode} />}
         {currentView === 'data' && <DataManager isOfflineMode={isOfflineMode} />}
       </main>
     </div>
