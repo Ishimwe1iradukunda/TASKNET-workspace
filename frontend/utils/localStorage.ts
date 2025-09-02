@@ -4,6 +4,7 @@ import type { Wiki } from '~backend/workspace/wikis/create';
 import type { Project } from '~backend/workspace/projects/create';
 import type { Email } from '~backend/workspace/emails/list';
 import type { Document } from '~backend/workspace/documents/list';
+import type { Reminder } from '~backend/reminders/create';
 
 interface Form {
   id: string;
@@ -61,9 +62,10 @@ export class LocalStorageManager {
   private static readonly FORMS_KEY = 'tasknetworkspace_forms';
   private static readonly CUSTOM_FIELDS_KEY = 'tasknetworkspace_custom_fields';
   private static readonly AUTOMATIONS_KEY = 'tasknetworkspace_automations';
+  private static readonly REMINDERS_KEY = 'tasknetworkspace_reminders';
 
   static init() {
-    const keys = [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY];
+    const keys = [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY, this.REMINDERS_KEY];
     keys.forEach(key => {
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, JSON.stringify([]));
@@ -859,9 +861,27 @@ export class LocalStorageManager {
     return automation;
   }
 
+  // Reminders management
+  static getReminders(): Reminder[] {
+    return this.getItems<Reminder>(this.REMINDERS_KEY).map(reminder => ({
+      ...reminder,
+      createdAt: new Date(reminder.createdAt),
+      remindAt: new Date(reminder.remindAt),
+    }));
+  }
+  static saveReminders = (reminders: Reminder[]) => this.saveItems(this.REMINDERS_KEY, reminders);
+  static createReminder(data: Omit<Reminder, 'id' | 'createdAt' | 'isTriggered'>): Reminder {
+    const reminders = this.getReminders();
+    const reminder: Reminder = { ...data, id: crypto.randomUUID(), isTriggered: false, createdAt: new Date() };
+    reminders.unshift(reminder);
+    this.saveReminders(reminders);
+    return reminder;
+  }
+  static deleteReminder = (id: string) => this.saveReminders(this.getReminders().filter(r => r.id !== id));
+
   // General utilities
   static clearAll() {
-    [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY].forEach(key => {
+    [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY, this.REMINDERS_KEY].forEach(key => {
       localStorage.removeItem(key);
     });
     this.init();

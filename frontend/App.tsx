@@ -8,7 +8,7 @@ import { ProjectsView } from './components/ProjectsView';
 import { EmailView } from './components/EmailView';
 import { CalendarView } from './components/CalendarView';
 import { DocumentsView } from './components/DocumentsView';
-import { PdfToolsView } from './components/PdfToolsView';
+import { ToolsView } from './components/ToolsView';
 import { TimeTrackingView } from './components/TimeTrackingView';
 import { PortfoliosView } from './components/PortfoliosView';
 import { SprintsView } from './components/SprintsView';
@@ -23,12 +23,15 @@ import { QuickCapture } from './components/QuickCapture';
 import { LocalStorageManager } from './utils/localStorage';
 import { ThemeProvider } from './theme';
 import { CommandPalette } from './components/CommandPalette';
+import { PlannerView } from './components/PlannerView';
+import { ChatView } from './components/ChatView';
+import { RemindersView } from './components/RemindersView';
 
 export type ViewType = 
   | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
-  | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' 
+  | 'documents' | 'tools' | 'time-tracking' | 'portfolios' | 'sprints' 
   | 'goals' | 'data' | 'dashboard' | 'activity' | 'automations' 
-  | 'custom-fields' | 'forms';
+  | 'custom-fields' | 'forms' | 'planner' | 'chat' | 'reminders';
 
 function AppInner() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -74,7 +77,7 @@ function AppInner() {
       case 'email': return <EmailView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'calendar': return <CalendarView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'documents': return <DocumentsView key={refreshKey} isOfflineMode={isOfflineMode} />;
-      case 'pdf-tools': return <PdfToolsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'tools': return <ToolsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'time-tracking': return <TimeTrackingView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'portfolios': return <PortfoliosView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'sprints': return <SprintsView key={refreshKey} isOfflineMode={isOfflineMode} />;
@@ -83,6 +86,9 @@ function AppInner() {
       case 'automations': return <AutomationsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'custom-fields': return <CustomFieldsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'forms': return <FormsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'planner': return <PlannerView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'chat': return <ChatView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'reminders': return <RemindersView key={refreshKey} isOfflineMode={isOfflineMode} />;
       default: return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} onViewChange={setCurrentView} />;
     }
   };
