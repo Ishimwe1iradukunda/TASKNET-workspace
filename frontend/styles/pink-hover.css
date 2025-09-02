@@ -1,0 +1,20 @@
+/* Global pink hover styles for text inputs and textareas */
+input:not([type="checkbox"]):not([type="radio"]):hover:not(:disabled):not([aria-disabled="true"]):not(:focus),
+textarea:hover:not(:disabled):not([aria-disabled="true"]):not(:focus) {
+  border-color: rgb(236 72 153) !important; /* pink-500 */
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.25) !important; /* pink-400-ish ring */
+  background-color: rgba(244, 114, 182, 0.06);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+/* Dark mode tweak for better contrast */
+.dark input:not([type="checkbox"]):not([type="radio"]):hover:not(:disabled):not([aria-disabled="true"]):not(:focus),
+.dark textarea:hover:not(:disabled):not([aria-disabled="true"]):not(:focus) {
+  background-color: rgba(244, 114, 182, 0.12);
+}
+
+/* Keep cursor and appearance consistent on hover */
+input:not([type="checkbox"]):not([type="radio"]):hover,
+textarea:hover {
+  cursor: text;
+}

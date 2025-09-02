@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import './styles/pink-hover.css';
 import { Header } from './components/Header';
 import { NotesView } from './components/NotesView';
 import { TasksView } from './components/TasksView';
