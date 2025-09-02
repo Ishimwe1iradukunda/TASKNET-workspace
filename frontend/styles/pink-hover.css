@@ -18,3 +18,111 @@ input:not([type="checkbox"]):not([type="radio"]):hover,
 textarea:hover {
   cursor: text;
 }
+
+/* --------------------------------------------- */
+/* Top Menu Hover Enhancements                   */
+/* Subtle, accessible hover interactions         */
+/* --------------------------------------------- */
+
+:root {
+  /* Fallbacks leverage the existing pink accent if primary is unavailable */
+  --tn-menu-accent: var(--primary, #ec4899);
+  --tn-menu-accent-weak: rgba(236, 72, 153, 0.12); /* pink-500 @ ~12% */
+  --tn-menu-accent-strong: rgba(236, 72, 153, 0.85); /* pink-500 @ ~85% */
+  --tn-muted-bg: rgba(148, 163, 184, 0.12); /* slate-ish as generic muted bg */
+}
+
+.dark {
+  --tn-menu-accent-weak: rgba(236, 72, 153, 0.18);
+}
+
+/* Main top menu buttons (ghost/secondary) */
+.menu-hover {
+  position: relative;
+  overflow: hidden; /* contain underline animation */
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+/* Slight lift on hover */
+.menu-hover:hover {
+  transform: translateY(-1px);
+}
+
+/* Underline accent on hover */
+.menu-hover::after {
+  content: "";
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 0.35rem;
+  height: 2px;
+  border-radius: 2px;
+
+  /* Prefer color-mix with primary; fallback to pink */
+  background:
+    color-mix(in oklab, var(--tn-menu-accent) 80%, transparent);
+  /* Fallback for browsers without color-mix */
+  background: var(--tn-menu-accent-strong);
+
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 160ms ease;
+}
+
+.menu-hover:hover::after {
+  transform: scaleX(1);
+}
+
+/* Improve focus-visible states for keyboard users */
+.menu-hover:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--tn-menu-accent-weak);
+  border-radius: 0.5rem;
+}
+
+/* Dropdown items: subtle bg shift, left accent and nudge */
+.menu-dd-hover {
+  position: relative;
+  transition: background-color 0.15s ease, padding-left 0.15s ease;
+}
+
+.menu-dd-hover:hover {
+  background-color: var(--tn-muted-bg);
+  padding-left: 0.625rem; /* slight nudge */
+}
+
+/* Left accent bar on hover */
+.menu-dd-hover::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 3px;
+  height: 60%;
+  border-radius: 2px;
+
+  /* Prefer color-mix with primary; fallback to pink */
+  background:
+    color-mix(in oklab, var(--tn-menu-accent) 92%, transparent);
+  /* Fallback for browsers without color-mix */
+  background: var(--tn-menu-accent-strong);
+
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
+  transition: transform 140ms ease;
+}
+
+.menu-dd-hover:hover::before {
+  transform: translateY(-50%) scaleY(1);
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .menu-hover,
+  .menu-hover::after,
+  .menu-dd-hover,
+  .menu-dd-hover::before {
+    transition: none !important;
+    transform: none !important;
+  }
+}
