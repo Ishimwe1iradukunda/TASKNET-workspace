@@ -17,39 +17,54 @@ import { EnterpriseSearchView } from './components/EnterpriseSearchView';
 import { DataManager } from './components/DataManager';
 import { DashboardView } from './components/DashboardView';
 import { ActivityFeedView } from './components/ActivityFeedView';
+import { AutomationsView } from './components/AutomationsView';
+import { CustomFieldsView } from './components/CustomFieldsView';
+import { FormsView } from './components/FormsView';
 import { QuickCapture } from './components/QuickCapture';
 import { LocalStorageManager } from './utils/localStorage';
 
-export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' | 'goals' | 'search' | 'data' | 'dashboard' | 'activity';
+export type ViewType = 
+  | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
+  | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' 
+  | 'goals' | 'search' | 'data' | 'dashboard' | 'activity' | 'automations' 
+  | 'custom-fields' | 'forms';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isOfflineMode, setIsOfflineMode] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     LocalStorageManager.init();
   }, []);
 
+  const handleItemCreated = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   const renderView = () => {
     switch (currentView) {
-      case 'dashboard': return <DashboardView isOfflineMode={isOfflineMode} />;
-      case 'activity': return <ActivityFeedView isOfflineMode={isOfflineMode} />;
-      case 'notes': return <NotesView isOfflineMode={isOfflineMode} />;
-      case 'tasks': return <TasksView isOfflineMode={isOfflineMode} />;
-      case 'kanban': return <KanbanView isOfflineMode={isOfflineMode} />;
-      case 'wikis': return <WikisView isOfflineMode={isOfflineMode} />;
-      case 'projects': return <ProjectsView isOfflineMode={isOfflineMode} />;
-      case 'email': return <EmailView isOfflineMode={isOfflineMode} />;
-      case 'calendar': return <CalendarView isOfflineMode={isOfflineMode} />;
-      case 'documents': return <DocumentsView isOfflineMode={isOfflineMode} />;
-      case 'pdf-tools': return <PdfToolsView isOfflineMode={isOfflineMode} />;
-      case 'time-tracking': return <TimeTrackingView isOfflineMode={isOfflineMode} />;
-      case 'portfolios': return <PortfoliosView isOfflineMode={isOfflineMode} />;
-      case 'sprints': return <SprintsView isOfflineMode={isOfflineMode} />;
-      case 'goals': return <GoalsView isOfflineMode={isOfflineMode} />;
-      case 'search': return <EnterpriseSearchView isOfflineMode={isOfflineMode} />;
-      case 'data': return <DataManager isOfflineMode={isOfflineMode} />;
-      default: return <DashboardView isOfflineMode={isOfflineMode} />;
+      case 'dashboard': return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'activity': return <ActivityFeedView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'notes': return <NotesView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'tasks': return <TasksView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'kanban': return <KanbanView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'wikis': return <WikisView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'projects': return <ProjectsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'email': return <EmailView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'calendar': return <CalendarView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'documents': return <DocumentsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'pdf-tools': return <PdfToolsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'time-tracking': return <TimeTrackingView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'portfolios': return <PortfoliosView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'sprints': return <SprintsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'goals': return <GoalsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'search': return <EnterpriseSearchView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'data': return <DataManager key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'automations': return <AutomationsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'custom-fields': return <CustomFieldsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'forms': return <FormsView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      default: return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} />;
     }
   };
 
@@ -66,7 +81,7 @@ function App() {
         {renderView()}
       </main>
 
-      <QuickCapture isOfflineMode={isOfflineMode} />
+      <QuickCapture isOfflineMode={isOfflineMode} onItemCreated={handleItemCreated} />
     </div>
   );
 }
