@@ -79,7 +79,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
     { id: 'automations' as ViewType, icon: Zap, label: 'Automations' },
     { id: 'custom-fields' as ViewType, icon: ListPlus, label: 'Custom Fields' },
     { id: 'forms' as ViewType, icon: ClipboardList, label: 'Forms' },
-    { id: 'pdf-tools' as ViewType, icon: FileImage, label: 'PDF Tools' },
+    { id: 'tools' as ViewType, icon: FileImage, label: 'PDF Tools' },
     { id: 'data' as ViewType, icon: Database, label: 'Data Manager' },
   ];
 
