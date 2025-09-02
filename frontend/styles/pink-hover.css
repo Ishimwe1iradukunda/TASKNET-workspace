@@ -30,17 +30,38 @@ textarea:hover {
   --tn-menu-accent-weak: rgba(236, 72, 153, 0.12); /* pink-500 @ ~12% */
   --tn-menu-accent-strong: rgba(236, 72, 153, 0.85); /* pink-500 @ ~85% */
   --tn-muted-bg: rgba(148, 163, 184, 0.12); /* slate-ish as generic muted bg */
+  --tn-muted-bg-strong: rgba(148, 163, 184, 0.24);
+  --tn-ring: rgba(148, 163, 184, 0.25);
 }
 
 .dark {
   --tn-menu-accent-weak: rgba(236, 72, 153, 0.18);
+  --tn-muted-bg: rgba(148, 163, 184, 0.18);
+  --tn-muted-bg-strong: rgba(148, 163, 184, 0.28);
+}
+
+/* Group container to emulate segmented control / screenshot look */
+.menu-group {
+  background: var(--tn-muted-bg);
+  border: 1px solid var(--tn-muted-bg-strong);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 2px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 /* Main top menu buttons (ghost/secondary) */
 .menu-hover {
   position: relative;
   overflow: hidden; /* contain underline animation */
-  transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Base pill shape for top menu */
+.menu-btn {
+  border-radius: 9999px !important;
+  padding-inline: 0.75rem !important;
+  height: 2.25rem !important;
 }
 
 /* Slight lift on hover */
@@ -52,8 +73,8 @@ textarea:hover {
 .menu-hover::after {
   content: "";
   position: absolute;
-  left: 0.5rem;
-  right: 0.5rem;
+  left: 0.75rem;
+  right: 0.75rem;
   bottom: 0.35rem;
   height: 2px;
   border-radius: 2px;
@@ -73,11 +94,30 @@ textarea:hover {
   transform: scaleX(1);
 }
 
+/* Active/selected top menu item */
+.menu-active {
+  background:
+    color-mix(in oklab, var(--tn-menu-accent) 10%, transparent);
+  /* Fallback */
+  background: var(--tn-menu-accent-weak);
+  color: inherit;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--tn-menu-accent) 45%, transparent),
+    0 1px 1px rgba(0,0,0,0.04);
+}
+
+.menu-active::after {
+  transform: scaleX(1);
+}
+
 /* Improve focus-visible states for keyboard users */
-.menu-hover:focus-visible {
+.menu-hover:focus-visible,
+.menu-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--tn-menu-accent-weak);
-  border-radius: 0.5rem;
+  box-shadow:
+    0 0 0 3px var(--tn-ring),
+    inset 0 0 0 1px color-mix(in oklab, var(--tn-menu-accent) 50%, transparent);
+  border-radius: 0.75rem;
 }
 
 /* Dropdown items: subtle bg shift, left accent and nudge */

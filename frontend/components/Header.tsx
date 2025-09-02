@@ -86,7 +86,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
   const NavDropdown = ({ label, items }: { label: string, items: { id: ViewType, icon: React.ElementType, label: string }[] }) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex items-center gap-1 menu-hover">
+        <Button variant="ghost" size="sm" className="flex items-center gap-1 menu-hover menu-btn">
           {label}
           <ChevronDown className="w-4 h-4" />
         </Button>
@@ -110,20 +110,20 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
     <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shrink-0 transition-colors">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
             <CheckSquare className="w-4 h-4 text-primary-foreground" />
           </div>
           <h1 className="text-xl font-bold hidden md:block">TaskNet</h1>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1 menu-group">
           {mainNavItems.map(item => (
             <Button
               key={item.id}
               variant={currentView === item.id ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => onViewChange(item.id)}
-              className="flex items-center gap-2 menu-hover"
+              className={`flex items-center gap-2 menu-hover menu-btn ${currentView === item.id ? 'menu-active' : ''}`}
             >
               <item.icon className="w-4 h-4" />
               {item.label}
@@ -139,7 +139,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
         <Button
           variant="outline"
           size="sm"
-          className="hidden md:flex items-center gap-2 menu-hover"
+          className="hidden md:flex items-center gap-2 menu-hover menu-btn"
           onClick={onOpenCommandPalette}
           title="Search (Ctrl/⌘ + K)"
         >
@@ -149,7 +149,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title="Theme" className="menu-hover">
+            <Button variant="ghost" size="icon" title="Theme" className="menu-hover menu-btn">
               {mode === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </Button>
           </DropdownMenuTrigger>
@@ -172,18 +172,18 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
           size="icon"
           onClick={() => onOfflineModeToggle(!isOfflineMode)}
           title={isOfflineMode ? 'Switch to Online Mode (Ctrl/⌘ + B)' : 'Switch to Offline Mode (Ctrl/⌘ + B)'}
-          className="menu-hover"
+          className="menu-hover menu-btn"
         >
           {isOfflineMode ? <WifiOff className="w-5 h-5" /> : <Wifi className="w-5 h-5" />}
         </Button>
 
-        <Button variant="ghost" size="icon" title="Notifications" className="menu-hover">
+        <Button variant="ghost" size="icon" title="Notifications" className="menu-hover menu-btn">
           <Bell className="w-5 h-5" />
         </Button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title="Settings & Tools" className="menu-hover">
+            <Button variant="ghost" size="icon" title="Settings & Tools" className="menu-hover menu-btn">
               <Settings className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
