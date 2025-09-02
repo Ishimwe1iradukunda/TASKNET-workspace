@@ -7,9 +7,11 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
 import backend from '~backend/client';
+import type { ViewType } from '../App';
 
 interface DashboardViewProps {
   isOfflineMode: boolean;
+  onViewChange: (view: ViewType) => void;
 }
 
 interface DashboardStats {
@@ -33,7 +35,7 @@ interface RecentActivity {
   timestamp: Date;
 }
 
-export function DashboardView({ isOfflineMode }: DashboardViewProps) {
+export function DashboardView({ isOfflineMode, onViewChange }: DashboardViewProps) {
   const [stats, setStats] = useState<DashboardStats>({
     totalTasks: 0,
     completedTasks: 0,
@@ -48,10 +50,10 @@ export function DashboardView({ isOfflineMode }: DashboardViewProps) {
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [quickActions] = useState([
-    { icon: CheckSquare, label: 'New Task', action: 'tasks' },
-    { icon: FileText, label: 'New Note', action: 'notes' },
-    { icon: Target, label: 'New Project', action: 'projects' },
-    { icon: Clock, label: 'Start Timer', action: 'time-tracking' },
+    { icon: CheckSquare, label: 'New Task', action: 'tasks' as ViewType },
+    { icon: FileText, label: 'New Note', action: 'notes' as ViewType },
+    { icon: Target, label: 'New Project', action: 'projects' as ViewType },
+    { icon: Clock, label: 'Start Timer', action: 'time-tracking' as ViewType },
   ]);
   const { toast } = useToast();
 
@@ -181,7 +183,7 @@ export function DashboardView({ isOfflineMode }: DashboardViewProps) {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {quickActions.map((action, index) => (
-              <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
+              <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewChange(action.action)}>
                 <CardContent className="flex flex-col items-center justify-center p-6 text-center">
                   <action.icon className="w-8 h-8 mb-2 text-primary" />
                   <span className="text-sm font-medium">{action.label}</span>

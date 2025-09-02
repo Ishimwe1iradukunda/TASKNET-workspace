@@ -43,7 +43,7 @@ function App() {
 
   const renderView = () => {
     switch (currentView) {
-      case 'dashboard': return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      case 'dashboard': return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} onViewChange={setCurrentView} />;
       case 'activity': return <ActivityFeedView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'notes': return <NotesView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'tasks': return <TasksView key={refreshKey} isOfflineMode={isOfflineMode} />;
@@ -62,7 +62,7 @@ function App() {
       case 'automations': return <AutomationsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'custom-fields': return <CustomFieldsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'forms': return <FormsView key={refreshKey} isOfflineMode={isOfflineMode} />;
-      default: return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} />;
+      default: return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} onViewChange={setCurrentView} />;
     }
   };
 
