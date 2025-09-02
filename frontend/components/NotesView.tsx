@@ -376,12 +376,12 @@ export function NotesView({ isOfflineMode }: NotesViewProps) {
               className="pl-10"
             />
           </div>
-          <Select value={selectedTag} onValueChange={setSelectedTag}>
+          <Select value={selectedTag || 'all'} onValueChange={(value) => setSelectedTag(value === 'all' ? '' : value)}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filter by tag" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All tags</SelectItem>
+              <SelectItem value="all">All tags</SelectItem>
               {getAllTags().map(tag => (
                 <SelectItem key={tag} value={tag}>{tag}</SelectItem>
               ))}

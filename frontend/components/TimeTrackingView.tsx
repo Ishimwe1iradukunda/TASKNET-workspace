@@ -180,21 +180,21 @@ export function TimeTrackingView({ isOfflineMode }: TimeTrackingViewProps) {
                   onChange={(e) => setDescription(e.target.value)}
                 />
                 <div className="grid grid-cols-2 gap-4">
-                  <Select value={selectedProject} onValueChange={setSelectedProject}>
+                  <Select value={selectedProject || 'none'} onValueChange={(value) => setSelectedProject(value === 'none' ? '' : value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select project" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No project</SelectItem>
+                      <SelectItem value="none">No project</SelectItem>
                       {/* Projects would be loaded here */}
                     </SelectContent>
                   </Select>
-                  <Select value={selectedTask} onValueChange={setSelectedTask}>
+                  <Select value={selectedTask || 'none'} onValueChange={(value) => setSelectedTask(value === 'none' ? '' : value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select task" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No task</SelectItem>
+                      <SelectItem value="none">No task</SelectItem>
                       {/* Tasks would be loaded here */}
                     </SelectContent>
                   </Select>
