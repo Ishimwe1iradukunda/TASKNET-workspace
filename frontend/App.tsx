@@ -13,7 +13,6 @@ import { TimeTrackingView } from './components/TimeTrackingView';
 import { PortfoliosView } from './components/PortfoliosView';
 import { SprintsView } from './components/SprintsView';
 import { GoalsView } from './components/GoalsView';
-import { EnterpriseSearchView } from './components/EnterpriseSearchView';
 import { DataManager } from './components/DataManager';
 import { DashboardView } from './components/DashboardView';
 import { ActivityFeedView } from './components/ActivityFeedView';
@@ -26,14 +25,13 @@ import { LocalStorageManager } from './utils/localStorage';
 export type ViewType = 
   | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
   | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' 
-  | 'goals' | 'search' | 'data' | 'dashboard' | 'activity' | 'automations' 
+  | 'goals' | 'data' | 'dashboard' | 'activity' | 'automations' 
   | 'custom-fields' | 'forms';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isOfflineMode, setIsOfflineMode] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
   useEffect(() => {
     LocalStorageManager.init();
@@ -41,11 +39,6 @@ function App() {
 
   const handleItemCreated = () => {
     setRefreshKey(prev => prev + 1);
-  };
-
-  const handleGlobalSearch = (query: string) => {
-    setGlobalSearchQuery(query);
-    setCurrentView('search');
   };
 
   const renderView = () => {
@@ -65,7 +58,6 @@ function App() {
       case 'portfolios': return <PortfoliosView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'sprints': return <SprintsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'goals': return <GoalsView key={refreshKey} isOfflineMode={isOfflineMode} />;
-      case 'search': return <EnterpriseSearchView key={`${refreshKey}-${globalSearchQuery}`} isOfflineMode={isOfflineMode} globalSearchQuery={globalSearchQuery} />;
       case 'data': return <DataManager key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'automations': return <AutomationsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'custom-fields': return <CustomFieldsView key={refreshKey} isOfflineMode={isOfflineMode} />;
@@ -81,7 +73,6 @@ function App() {
         onViewChange={setCurrentView}
         isOfflineMode={isOfflineMode}
         onOfflineModeToggle={setIsOfflineMode}
-        onGlobalSearch={handleGlobalSearch}
       />
       
       <main className="flex-1 overflow-hidden">
