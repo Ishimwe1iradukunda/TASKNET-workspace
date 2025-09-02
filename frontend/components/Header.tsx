@@ -75,12 +75,15 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
     { id: 'kanban' as ViewType, icon: Columns3, label: 'Kanban Board' },
   ];
 
-  const settingsItems = [
-    { id: 'automations' as ViewType, icon: Zap, label: 'Automations' },
+  const featuresItems = [
     { id: 'custom-fields' as ViewType, icon: ListPlus, label: 'Custom Fields' },
     { id: 'forms' as ViewType, icon: ClipboardList, label: 'Forms' },
     { id: 'tools' as ViewType, icon: FileImage, label: 'PDF Tools' },
     { id: 'data' as ViewType, icon: Database, label: 'Data Manager' },
+  ];
+
+  const settingsItems = [
+    { id: 'automations' as ViewType, icon: Zap, label: 'Automations' },
   ];
 
   const NavDropdown = ({ label, items }: { label: string, items: { id: ViewType, icon: React.ElementType, label: string }[] }) => (
@@ -132,6 +135,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
           <NavDropdown label="Collaboration" items={collaborationItems} />
           <NavDropdown label="Product" items={productItems} />
           <NavDropdown label="Workspace" items={workspaceItems} />
+          <NavDropdown label="Features" items={featuresItems} />
         </nav>
       </div>
 
@@ -183,12 +187,12 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title="Settings & Tools" className="menu-hover menu-btn">
+            <Button variant="ghost" size="icon" title="Settings" className="menu-hover menu-btn">
               <Settings className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Settings &amp; Tools</DropdownMenuLabel>
+            <DropdownMenuLabel>Settings</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {settingsItems.map(item => (
               <DropdownMenuItem
