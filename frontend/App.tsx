@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { NotesView } from './components/NotesView';
 import { TasksView } from './components/TasksView';
@@ -21,6 +21,8 @@ import { CustomFieldsView } from './components/CustomFieldsView';
 import { FormsView } from './components/FormsView';
 import { QuickCapture } from './components/QuickCapture';
 import { LocalStorageManager } from './utils/localStorage';
+import { ThemeProvider } from './theme';
+import { CommandPalette } from './components/CommandPalette';
 
 export type ViewType = 
   | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
@@ -28,13 +30,32 @@ export type ViewType =
   | 'goals' | 'data' | 'dashboard' | 'activity' | 'automations' 
   | 'custom-fields' | 'forms';
 
-function App() {
+function AppInner() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isOfflineMode, setIsOfflineMode] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
   useEffect(() => {
     LocalStorageManager.init();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      // Ctrl/Cmd + K opens command palette
+      if (mod && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setIsPaletteOpen((o) => !o);
+      }
+      // Ctrl/Cmd + B toggles offline
+      if (mod && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        setIsOfflineMode((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const handleItemCreated = () => {
@@ -67,20 +88,38 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
+    <>
       <Header 
         currentView={currentView} 
         onViewChange={setCurrentView}
         isOfflineMode={isOfflineMode}
         onOfflineModeToggle={setIsOfflineMode}
+        onOpenCommandPalette={() => setIsPaletteOpen(true)}
       />
       
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden transition-colors duration-200">
         {renderView()}
       </main>
 
       <QuickCapture isOfflineMode={isOfflineMode} onItemCreated={handleItemCreated} />
-    </div>
+
+      <CommandPalette
+        open={isPaletteOpen}
+        onOpenChange={setIsPaletteOpen}
+        isOfflineMode={isOfflineMode}
+        onNavigate={(viewId) => setCurrentView(viewId)}
+      />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <div className="flex flex-col h-screen bg-background text-foreground transition-colors duration-200">
+        <AppInner />
+      </div>
+    </ThemeProvider>
   );
 }
 

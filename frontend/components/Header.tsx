@@ -22,6 +22,10 @@ import {
   ListPlus,
   ClipboardList,
   Columns3,
+  Sun,
+  Moon,
+  Search,
+  Palette,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,15 +37,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ViewType } from '../App';
+import { useTheme, type Accent } from '../theme';
 
 interface HeaderProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
   isOfflineMode: boolean;
   onOfflineModeToggle: (offline: boolean) => void;
+  onOpenCommandPalette: () => void;
 }
 
-export function Header({ currentView, onViewChange, isOfflineMode, onOfflineModeToggle }: HeaderProps) {
+export function Header({ currentView, onViewChange, isOfflineMode, onOfflineModeToggle, onOpenCommandPalette }: HeaderProps) {
+  const { mode, setMode, accent, setAccent } = useTheme();
+
   const mainNavItems = [
     { id: 'dashboard' as ViewType, icon: BarChart3, label: 'Dashboard' },
     { id: 'tasks' as ViewType, icon: CheckSquare, label: 'Tasks' },
@@ -95,8 +103,18 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
     </DropdownMenu>
   );
 
+  const accents: { id: Accent; name: string }[] = [
+    { id: "violet", name: "Violet" },
+    { id: "blue", name: "Blue" },
+    { id: "teal", name: "Teal" },
+    { id: "emerald", name: "Emerald" },
+    { id: "amber", name: "Amber" },
+    { id: "rose", name: "Rose" },
+    { id: "pink", name: "Pink" },
+  ];
+
   return (
-    <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shrink-0">
+    <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6 shrink-0 transition-colors">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -126,20 +144,74 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
 
       <div className="flex items-center gap-2">
         <Button
+          variant="outline"
+          size="sm"
+          className="hidden md:flex items-center gap-2"
+          onClick={onOpenCommandPalette}
+          title="Search (Ctrl/⌘ + K)"
+        >
+          <Search className="w-4 h-4" />
+          Search
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" title="Theme">
+              {mode === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setMode('light')} className="flex items-center gap-2">
+              <Sun className="w-4 h-4" /> Light
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setMode('dark')} className="flex items-center gap-2">
+              <Moon className="w-4 h-4" /> Dark
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setMode('system')} className="flex items-center gap-2">
+              <Settings className="w-4 h-4" /> System
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="flex items-center gap-2">
+              <Palette className="w-4 h-4" /> Accent
+            </DropdownMenuLabel>
+            {accents.map(a => (
+              <DropdownMenuItem
+                key={a.id}
+                className="flex items-center gap-2"
+                onClick={() => setAccent(a.id)}
+              >
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{
+                    // purely visual indicator; CSS variable is already set in provider
+                    backgroundColor: 'hsl(var(--primary))',
+                    outline: accent === a.id ? '2px solid hsl(var(--primary))' : 'none'
+                  }}
+                />
+                <span className="capitalize">{a.name}</span>
+                {accent === a.id && <span className="ml-auto text-xs text-muted-foreground">Selected</span>}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
           variant="ghost"
           size="icon"
           onClick={() => onOfflineModeToggle(!isOfflineMode)}
-          title={isOfflineMode ? 'Switch to Online Mode' : 'Switch to Offline Mode'}
+          title={isOfflineMode ? 'Switch to Online Mode (Ctrl/⌘ + B)' : 'Switch to Offline Mode (Ctrl/⌘ + B)'}
         >
           {isOfflineMode ? <WifiOff className="w-5 h-5" /> : <Wifi className="w-5 h-5" />}
         </Button>
-        <Button variant="ghost" size="icon">
+
+        <Button variant="ghost" size="icon" title="Notifications">
           <Bell className="w-5 h-5" />
         </Button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" title="Settings & Tools">
               <Settings className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
