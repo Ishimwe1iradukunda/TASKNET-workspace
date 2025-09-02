@@ -4,6 +4,10 @@ import { db } from "../db";
 export interface ExportDataResponse {
   notes: any[];
   tasks: any[];
+  wikis: any[];
+  projects: any[];
+  emails: any[];
+  documents: any[];
   exportedAt: Date;
 }
 
@@ -13,6 +17,10 @@ export const exportData = api<void, ExportDataResponse>(
   async () => {
     const notesRows = await db.queryAll`SELECT * FROM notes ORDER BY created_at DESC`;
     const tasksRows = await db.queryAll`SELECT * FROM tasks ORDER BY created_at DESC`;
+    const wikisRows = await db.queryAll`SELECT * FROM wikis ORDER BY created_at DESC`;
+    const projectsRows = await db.queryAll`SELECT * FROM projects ORDER BY created_at DESC`;
+    const emailsRows = await db.queryAll`SELECT * FROM emails ORDER BY received_at DESC`;
+    const documentsRows = await db.queryAll`SELECT * FROM documents ORDER BY created_at DESC`;
     
     const notes = notesRows.map(row => ({
       ...row,
@@ -23,10 +31,23 @@ export const exportData = api<void, ExportDataResponse>(
       ...row,
       tags: JSON.parse(row.tags as string),
     }));
+
+    const wikis = wikisRows.map(row => ({
+      ...row,
+      tags: JSON.parse(row.tags as string),
+    }));
+
+    const projects = projectsRows.map(row => ({ ...row }));
+    const emails = emailsRows.map(row => ({ ...row }));
+    const documents = documentsRows.map(row => ({ ...row }));
     
     return {
       notes,
       tasks,
+      wikis,
+      projects,
+      emails,
+      documents,
       exportedAt: new Date(),
     };
   }

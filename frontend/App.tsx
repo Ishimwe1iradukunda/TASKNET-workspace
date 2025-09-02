@@ -5,11 +5,13 @@ import { TasksView } from './components/TasksView';
 import { KanbanView } from './components/KanbanView';
 import { WikisView } from './components/WikisView';
 import { ProjectsView } from './components/ProjectsView';
-import { AIAssistant } from './components/AIAssistant';
+import { EmailView } from './components/EmailView';
+import { CalendarView } from './components/CalendarView';
+import { DocumentsView } from './components/DocumentsView';
 import { DataManager } from './components/DataManager';
 import { LocalStorageManager } from './utils/localStorage';
 
-export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'ai' | 'data';
+export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'data';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('notes');
@@ -35,7 +37,9 @@ function App() {
         {currentView === 'kanban' && <KanbanView isOfflineMode={isOfflineMode} />}
         {currentView === 'wikis' && <WikisView isOfflineMode={isOfflineMode} />}
         {currentView === 'projects' && <ProjectsView isOfflineMode={isOfflineMode} />}
-        {currentView === 'ai' && <AIAssistant isOfflineMode={isOfflineMode} />}
+        {currentView === 'email' && <EmailView isOfflineMode={isOfflineMode} />}
+        {currentView === 'calendar' && <CalendarView isOfflineMode={isOfflineMode} />}
+        {currentView === 'documents' && <DocumentsView isOfflineMode={isOfflineMode} />}
         {currentView === 'data' && <DataManager isOfflineMode={isOfflineMode} />}
       </main>
     </div>

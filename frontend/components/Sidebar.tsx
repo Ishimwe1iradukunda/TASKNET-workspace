@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, CheckSquare, Columns3, BookOpen, FolderOpen, Bot, Database, Wifi, WifiOff } from 'lucide-react';
+import { FileText, CheckSquare, Columns3, BookOpen, FolderOpen, Mail, Calendar, FileArchive, Database, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ViewType } from '../App';
 
@@ -17,7 +17,9 @@ export function Sidebar({ currentView, onViewChange, isOfflineMode, onOfflineMod
     { id: 'kanban' as ViewType, icon: Columns3, label: 'Kanban', description: 'Visual project boards' },
     { id: 'wikis' as ViewType, icon: BookOpen, label: 'Wikis', description: 'Centralize your knowledge' },
     { id: 'projects' as ViewType, icon: FolderOpen, label: 'Projects', description: 'Manage any project' },
-    { id: 'ai' as ViewType, icon: Bot, label: 'AI Assistant', description: 'Build, write, automate' },
+    { id: 'email' as ViewType, icon: Mail, label: 'Email', description: 'Connect your inbox' },
+    { id: 'calendar' as ViewType, icon: Calendar, label: 'Calendar', description: 'Schedule your time' },
+    { id: 'documents' as ViewType, icon: FileArchive, label: 'Documents', description: 'Store your files' },
     { id: 'data' as ViewType, icon: Database, label: 'Data', description: 'Export & sync' },
   ];
 
@@ -28,7 +30,7 @@ export function Sidebar({ currentView, onViewChange, isOfflineMode, onOfflineMod
         <p className="text-sm text-muted-foreground">Local-first productivity suite</p>
       </div>
       
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
           <Button
             key={item.id}
@@ -49,7 +51,7 @@ export function Sidebar({ currentView, onViewChange, isOfflineMode, onOfflineMod
         ))}
       </nav>
       
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border mt-auto">
         <Button
           variant="outline"
           size="sm"

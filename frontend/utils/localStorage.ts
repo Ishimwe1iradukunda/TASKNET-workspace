@@ -1,376 +1,193 @@
 import type { Note } from '~backend/workspace/notes/create';
 import type { Task } from '~backend/workspace/tasks/create';
-
-interface Wiki {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  parentId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  description?: string;
-  status: "active" | "paused" | "completed" | "archived";
-  startDate?: Date;
-  endDate?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import type { Wiki } from '~backend/workspace/wikis/create';
+import type { Project } from '~backend/workspace/projects/create';
+import type { Email } from '~backend/workspace/emails/list';
+import type { Document } from '~backend/workspace/documents/list';
 
 export class LocalStorageManager {
   private static readonly NOTES_KEY = 'tasknetworkspace_notes';
   private static readonly TASKS_KEY = 'tasknetworkspace_tasks';
   private static readonly WIKIS_KEY = 'tasknetworkspace_wikis';
   private static readonly PROJECTS_KEY = 'tasknetworkspace_projects';
+  private static readonly EMAILS_KEY = 'tasknetworkspace_emails';
+  private static readonly DOCUMENTS_KEY = 'tasknetworkspace_documents';
 
   static init() {
-    // Initialize storage if not exists
-    if (!localStorage.getItem(this.NOTES_KEY)) {
-      localStorage.setItem(this.NOTES_KEY, JSON.stringify([]));
+    const keys = [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY];
+    keys.forEach(key => {
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, JSON.stringify([]));
+      }
+    });
+  }
+
+  // Generic getter/setter
+  private static getItems<T>(key: string): T[] {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error(`Failed to load from localStorage key "${key}":`, error);
+      return [];
     }
-    if (!localStorage.getItem(this.TASKS_KEY)) {
-      localStorage.setItem(this.TASKS_KEY, JSON.stringify([]));
-    }
-    if (!localStorage.getItem(this.WIKIS_KEY)) {
-      localStorage.setItem(this.WIKIS_KEY, JSON.stringify([]));
-    }
-    if (!localStorage.getItem(this.PROJECTS_KEY)) {
-      localStorage.setItem(this.PROJECTS_KEY, JSON.stringify([]));
+  }
+
+  private static saveItems<T>(key: string, items: T[]) {
+    try {
+      localStorage.setItem(key, JSON.stringify(items));
+    } catch (error) {
+      console.error(`Failed to save to localStorage key "${key}":`, error);
     }
   }
 
   // Notes management
   static getNotes(): Note[] {
-    try {
-      const data = localStorage.getItem(this.NOTES_KEY);
-      const notes = data ? JSON.parse(data) : [];
-      // Convert date strings back to Date objects
-      return notes.map((note: any) => ({
-        ...note,
-        createdAt: new Date(note.createdAt),
-        updatedAt: new Date(note.updatedAt),
-      }));
-    } catch (error) {
-      console.error('Failed to load notes from localStorage:', error);
-      return [];
-    }
+    return this.getItems<Note>(this.NOTES_KEY).map(note => ({
+      ...note,
+      createdAt: new Date(note.createdAt),
+      updatedAt: new Date(note.updatedAt),
+    }));
   }
-
-  static saveNotes(notes: Note[]) {
-    try {
-      localStorage.setItem(this.NOTES_KEY, JSON.stringify(notes));
-    } catch (error) {
-      console.error('Failed to save notes to localStorage:', error);
-    }
-  }
-
-  static createNote(data: { title: string; content: string; tags: string[] }): Note {
+  static saveNotes = (notes: Note[]) => this.saveItems(this.NOTES_KEY, notes);
+  static createNote(data: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>): Note {
     const notes = this.getNotes();
-    const note: Note = {
-      id: crypto.randomUUID(),
-      title: data.title,
-      content: data.content,
-      tags: data.tags,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
+    const note: Note = { ...data, id: crypto.randomUUID(), createdAt: new Date(), updatedAt: new Date() };
     notes.unshift(note);
     this.saveNotes(notes);
     return note;
   }
-
-  static updateNote(id: string, updates: Partial<Omit<Note, 'id' | 'createdAt' | 'updatedAt'>>): Note {
+  static updateNote(id: string, updates: Partial<Note>): Note {
     const notes = this.getNotes();
-    const index = notes.findIndex(note => note.id === id);
-    
-    if (index === -1) {
-      throw new Error('Note not found');
-    }
-    
-    const updatedNote = {
-      ...notes[index],
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
+    const index = notes.findIndex(n => n.id === id);
+    if (index === -1) throw new Error('Note not found');
+    const updatedNote = { ...notes[index], ...updates, updatedAt: new Date() };
     notes[index] = updatedNote;
     this.saveNotes(notes);
     return updatedNote;
   }
-
-  static deleteNote(id: string) {
-    const notes = this.getNotes();
-    const filtered = notes.filter(note => note.id !== id);
-    this.saveNotes(filtered);
-  }
-
-  static importNotes(newNotes: any[]) {
-    try {
-      const processedNotes = newNotes.map(note => ({
-        ...note,
-        createdAt: new Date(note.createdAt || note.created_at),
-        updatedAt: new Date(note.updatedAt || note.updated_at),
-      }));
-      this.saveNotes(processedNotes);
-    } catch (error) {
-      console.error('Failed to import notes:', error);
-      throw error;
-    }
-  }
+  static deleteNote = (id: string) => this.saveNotes(this.getNotes().filter(n => n.id !== id));
+  static importNotes = (newNotes: any[]) => this.saveNotes(newNotes.map(n => ({ ...n, createdAt: new Date(n.createdAt || n.created_at), updatedAt: new Date(n.updatedAt || n.updated_at) })));
 
   // Tasks management
   static getTasks(): Task[] {
-    try {
-      const data = localStorage.getItem(this.TASKS_KEY);
-      const tasks = data ? JSON.parse(data) : [];
-      // Convert date strings back to Date objects
-      return tasks.map((task: any) => ({
-        ...task,
-        createdAt: new Date(task.createdAt),
-        updatedAt: new Date(task.updatedAt),
-        dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-      }));
-    } catch (error) {
-      console.error('Failed to load tasks from localStorage:', error);
-      return [];
-    }
+    return this.getItems<Task>(this.TASKS_KEY).map(task => ({
+      ...task,
+      createdAt: new Date(task.createdAt),
+      updatedAt: new Date(task.updatedAt),
+      dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+    }));
   }
-
-  static saveTasks(tasks: Task[]) {
-    try {
-      localStorage.setItem(this.TASKS_KEY, JSON.stringify(tasks));
-    } catch (error) {
-      console.error('Failed to save tasks to localStorage:', error);
-    }
-  }
-
-  static createTask(data: {
-    title: string;
-    description?: string;
-    tags: string[];
-    status?: 'todo' | 'in-progress' | 'done';
-    priority?: 'low' | 'medium' | 'high';
-    dueDate?: Date;
-  }): Task {
+  static saveTasks = (tasks: Task[]) => this.saveItems(this.TASKS_KEY, tasks);
+  static createTask(data: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Task {
     const tasks = this.getTasks();
-    const task: Task = {
-      id: crypto.randomUUID(),
-      title: data.title,
-      description: data.description,
-      tags: data.tags,
-      status: data.status || 'todo',
-      priority: data.priority || 'medium',
-      dueDate: data.dueDate,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
+    const task: Task = { ...data, id: crypto.randomUUID(), createdAt: new Date(), updatedAt: new Date() };
     tasks.unshift(task);
     this.saveTasks(tasks);
     return task;
   }
-
-  static updateTask(id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>): Task {
+  static updateTask(id: string, updates: Partial<Task>): Task {
     const tasks = this.getTasks();
-    const index = tasks.findIndex(task => task.id === id);
-    
-    if (index === -1) {
-      throw new Error('Task not found');
-    }
-    
-    const updatedTask = {
-      ...tasks[index],
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
+    const index = tasks.findIndex(t => t.id === id);
+    if (index === -1) throw new Error('Task not found');
+    const updatedTask = { ...tasks[index], ...updates, updatedAt: new Date() };
     tasks[index] = updatedTask;
     this.saveTasks(tasks);
     return updatedTask;
   }
-
-  static deleteTask(id: string) {
-    const tasks = this.getTasks();
-    const filtered = tasks.filter(task => task.id !== id);
-    this.saveTasks(filtered);
-  }
-
-  static importTasks(newTasks: any[]) {
-    try {
-      const processedTasks = newTasks.map(task => ({
-        ...task,
-        createdAt: new Date(task.createdAt || task.created_at),
-        updatedAt: new Date(task.updatedAt || task.updated_at),
-        dueDate: task.dueDate || task.due_date ? new Date(task.dueDate || task.due_date) : undefined,
-      }));
-      this.saveTasks(processedTasks);
-    } catch (error) {
-      console.error('Failed to import tasks:', error);
-      throw error;
-    }
-  }
+  static deleteTask = (id: string) => this.saveTasks(this.getTasks().filter(t => t.id !== id));
+  static importTasks = (newTasks: any[]) => this.saveTasks(newTasks.map(t => ({ ...t, createdAt: new Date(t.createdAt || t.created_at), updatedAt: new Date(t.updatedAt || t.updated_at), dueDate: t.dueDate || t.due_date ? new Date(t.dueDate || t.due_date) : undefined })));
 
   // Wikis management
   static getWikis(): Wiki[] {
-    try {
-      const data = localStorage.getItem(this.WIKIS_KEY);
-      const wikis = data ? JSON.parse(data) : [];
-      return wikis.map((wiki: any) => ({
-        ...wiki,
-        createdAt: new Date(wiki.createdAt),
-        updatedAt: new Date(wiki.updatedAt),
-      }));
-    } catch (error) {
-      console.error('Failed to load wikis from localStorage:', error);
-      return [];
-    }
+    return this.getItems<Wiki>(this.WIKIS_KEY).map(wiki => ({
+      ...wiki,
+      createdAt: new Date(wiki.createdAt),
+      updatedAt: new Date(wiki.updatedAt),
+    }));
   }
-
-  static saveWikis(wikis: Wiki[]) {
-    try {
-      localStorage.setItem(this.WIKIS_KEY, JSON.stringify(wikis));
-    } catch (error) {
-      console.error('Failed to save wikis to localStorage:', error);
-    }
-  }
-
-  static createWiki(data: { title: string; content: string; tags: string[]; parentId?: string }): Wiki {
+  static saveWikis = (wikis: Wiki[]) => this.saveItems(this.WIKIS_KEY, wikis);
+  static createWiki(data: Omit<Wiki, 'id' | 'createdAt' | 'updatedAt'>): Wiki {
     const wikis = this.getWikis();
-    const wiki: Wiki = {
-      id: crypto.randomUUID(),
-      title: data.title,
-      content: data.content,
-      tags: data.tags,
-      parentId: data.parentId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
+    const wiki: Wiki = { ...data, id: crypto.randomUUID(), createdAt: new Date(), updatedAt: new Date() };
     wikis.unshift(wiki);
     this.saveWikis(wikis);
     return wiki;
   }
-
-  static updateWiki(id: string, updates: Partial<Omit<Wiki, 'id' | 'createdAt' | 'updatedAt' | 'parentId'>>): Wiki {
+  static updateWiki(id: string, updates: Partial<Wiki>): Wiki {
     const wikis = this.getWikis();
-    const index = wikis.findIndex(wiki => wiki.id === id);
-    
-    if (index === -1) {
-      throw new Error('Wiki not found');
-    }
-    
-    const updatedWiki = {
-      ...wikis[index],
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
+    const index = wikis.findIndex(w => w.id === id);
+    if (index === -1) throw new Error('Wiki not found');
+    const updatedWiki = { ...wikis[index], ...updates, updatedAt: new Date() };
     wikis[index] = updatedWiki;
     this.saveWikis(wikis);
     return updatedWiki;
   }
-
-  static deleteWiki(id: string) {
-    const wikis = this.getWikis();
-    const filtered = wikis.filter(wiki => wiki.id !== id);
-    this.saveWikis(filtered);
-  }
+  static deleteWiki = (id: string) => this.saveWikis(this.getWikis().filter(w => w.id !== id));
 
   // Projects management
   static getProjects(): Project[] {
-    try {
-      const data = localStorage.getItem(this.PROJECTS_KEY);
-      const projects = data ? JSON.parse(data) : [];
-      return projects.map((project: any) => ({
-        ...project,
-        createdAt: new Date(project.createdAt),
-        updatedAt: new Date(project.updatedAt),
-        startDate: project.startDate ? new Date(project.startDate) : undefined,
-        endDate: project.endDate ? new Date(project.endDate) : undefined,
-      }));
-    } catch (error) {
-      console.error('Failed to load projects from localStorage:', error);
-      return [];
-    }
+    return this.getItems<Project>(this.PROJECTS_KEY).map(project => ({
+      ...project,
+      createdAt: new Date(project.createdAt),
+      updatedAt: new Date(project.updatedAt),
+      startDate: project.startDate ? new Date(project.startDate) : undefined,
+      endDate: project.endDate ? new Date(project.endDate) : undefined,
+    }));
   }
-
-  static saveProjects(projects: Project[]) {
-    try {
-      localStorage.setItem(this.PROJECTS_KEY, JSON.stringify(projects));
-    } catch (error) {
-      console.error('Failed to save projects to localStorage:', error);
-    }
-  }
-
-  static createProject(data: {
-    name: string;
-    description?: string;
-    status?: "active" | "paused" | "completed" | "archived";
-    startDate?: Date;
-    endDate?: Date;
-  }): Project {
+  static saveProjects = (projects: Project[]) => this.saveItems(this.PROJECTS_KEY, projects);
+  static createProject(data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Project {
     const projects = this.getProjects();
-    const project: Project = {
-      id: crypto.randomUUID(),
-      name: data.name,
-      description: data.description,
-      status: data.status || "active",
-      startDate: data.startDate,
-      endDate: data.endDate,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
+    const project: Project = { ...data, id: crypto.randomUUID(), createdAt: new Date(), updatedAt: new Date() };
     projects.unshift(project);
     this.saveProjects(projects);
     return project;
   }
-
-  static updateProject(id: string, updates: Partial<Omit<Project, 'id' | 'createdAt' | 'updatedAt'>>): Project {
+  static updateProject(id: string, updates: Partial<Project>): Project {
     const projects = this.getProjects();
-    const index = projects.findIndex(project => project.id === id);
-    
-    if (index === -1) {
-      throw new Error('Project not found');
-    }
-    
-    const updatedProject = {
-      ...projects[index],
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
+    const index = projects.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Project not found');
+    const updatedProject = { ...projects[index], ...updates, updatedAt: new Date() };
     projects[index] = updatedProject;
     this.saveProjects(projects);
     return updatedProject;
   }
+  static deleteProject = (id: string) => this.saveProjects(this.getProjects().filter(p => p.id !== id));
 
-  static deleteProject(id: string) {
-    const projects = this.getProjects();
-    const filtered = projects.filter(project => project.id !== id);
-    this.saveProjects(filtered);
+  // Email management
+  static getEmails(): Email[] {
+    return this.getItems<Email>(this.EMAILS_KEY).map(email => ({
+      ...email,
+      receivedAt: new Date(email.receivedAt),
+    }));
   }
+  static saveEmails = (emails: Email[]) => this.saveItems(this.EMAILS_KEY, emails);
+  static updateEmail(id: string, updates: Partial<Email>): Email {
+    const emails = this.getEmails();
+    const index = emails.findIndex(e => e.id === id);
+    if (index === -1) throw new Error('Email not found');
+    const updatedEmail = { ...emails[index], ...updates };
+    emails[index] = updatedEmail;
+    this.saveEmails(emails);
+    return updatedEmail;
+  }
+  static deleteEmail = (id: string) => this.saveEmails(this.getEmails().filter(e => e.id !== id));
+
+  // Document management (metadata only)
+  static getDocuments(): Document[] {
+    return this.getItems<Document>(this.DOCUMENTS_KEY).map(doc => ({
+      ...doc,
+      createdAt: new Date(doc.createdAt),
+    }));
+  }
+  static saveDocuments = (docs: Document[]) => this.saveItems(this.DOCUMENTS_KEY, docs);
+  static deleteDocument = (id: string) => this.saveDocuments(this.getDocuments().filter(d => d.id !== id));
 
   // General utilities
   static clearAll() {
-    localStorage.removeItem(this.NOTES_KEY);
-    localStorage.removeItem(this.TASKS_KEY);
-    localStorage.removeItem(this.WIKIS_KEY);
-    localStorage.removeItem(this.PROJECTS_KEY);
+    [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY].forEach(key => {
+      localStorage.removeItem(key);
+    });
     this.init();
-  }
-
-  static getStorageSize(): number {
-    const notes = localStorage.getItem(this.NOTES_KEY) || '';
-    const tasks = localStorage.getItem(this.TASKS_KEY) || '';
-    const wikis = localStorage.getItem(this.WIKIS_KEY) || '';
-    const projects = localStorage.getItem(this.PROJECTS_KEY) || '';
-    return new Blob([notes + tasks + wikis + projects]).size;
   }
 }

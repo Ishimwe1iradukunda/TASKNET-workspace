@@ -28,6 +28,8 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
           tasks: LocalStorageManager.getTasks(),
           wikis: LocalStorageManager.getWikis(),
           projects: LocalStorageManager.getProjects(),
+          emails: LocalStorageManager.getEmails(),
+          documents: LocalStorageManager.getDocuments(),
           exportedAt: new Date(),
         };
       } else {
@@ -70,44 +72,27 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
       const data = JSON.parse(text);
       
       if (isOfflineMode) {
-        if (data.notes) {
-          LocalStorageManager.importNotes(data.notes);
-        }
-        if (data.tasks) {
-          LocalStorageManager.importTasks(data.tasks);
-        }
-        if (data.wikis) {
-          data.wikis.forEach((wiki: any) => {
-            LocalStorageManager.createWiki({
-              title: wiki.title,
-              content: wiki.content,
-              tags: wiki.tags || [],
-              parentId: wiki.parentId,
-            });
-          });
-        }
-        if (data.projects) {
-          data.projects.forEach((project: any) => {
-            LocalStorageManager.createProject({
-              name: project.name,
-              description: project.description,
-              status: project.status || "active",
-              startDate: project.startDate ? new Date(project.startDate) : undefined,
-              endDate: project.endDate ? new Date(project.endDate) : undefined,
-            });
-          });
-        }
+        if (data.notes) LocalStorageManager.saveNotes(data.notes);
+        if (data.tasks) LocalStorageManager.saveTasks(data.tasks);
+        if (data.wikis) LocalStorageManager.saveWikis(data.wikis);
+        if (data.projects) LocalStorageManager.saveProjects(data.projects);
+        if (data.emails) LocalStorageManager.saveEmails(data.emails);
+        if (data.documents) LocalStorageManager.saveDocuments(data.documents);
       } else {
         await backend.workspace.importData({
           notes: data.notes,
           tasks: data.tasks,
+          wikis: data.wikis,
+          projects: data.projects,
+          emails: data.emails,
+          documents: data.documents,
           overwrite: false,
         });
       }
       
       toast({
         title: "Success",
-        description: "Data imported successfully",
+        description: "Data imported successfully. Refresh the page to see changes.",
       });
     } catch (error) {
       console.error('Failed to import data:', error);
@@ -118,66 +103,44 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
       });
     } finally {
       setIsImporting(false);
-      // Reset the input
       event.target.value = '';
     }
   };
 
   const syncWithServer = async () => {
     if (isOfflineMode) {
-      setIsSyncing(true);
-      try {
-        // Export local data
-        const localData = {
-          notes: LocalStorageManager.getNotes(),
-          tasks: LocalStorageManager.getTasks(),
-        };
-        
-        // Import to server
-        await backend.workspace.importData({
-          notes: localData.notes,
-          tasks: localData.tasks,
-          overwrite: true,
-        });
-        
-        toast({
-          title: "Success",
-          description: "Local data synced to server",
-        });
-      } catch (error) {
-        console.error('Failed to sync data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to sync data to server",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSyncing(false);
-      }
-    } else {
-      setIsSyncing(true);
-      try {
-        // Download server data
-        const serverData = await backend.workspace.exportData();
-        
-        // Save to local storage
-        LocalStorageManager.importNotes(serverData.notes);
-        LocalStorageManager.importTasks(serverData.tasks);
-        
-        toast({
-          title: "Success",
-          description: "Server data synced to local storage",
-        });
-      } catch (error) {
-        console.error('Failed to sync data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to sync data from server",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSyncing(false);
-      }
+      toast({
+        title: "Offline",
+        description: "Cannot sync while in offline mode.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      // Simple sync: download server data and overwrite local
+      const serverData = await backend.workspace.exportData();
+      LocalStorageManager.saveNotes(serverData.notes);
+      LocalStorageManager.saveTasks(serverData.tasks);
+      LocalStorageManager.saveWikis(serverData.wikis);
+      LocalStorageManager.saveProjects(serverData.projects);
+      LocalStorageManager.saveEmails(serverData.emails);
+      LocalStorageManager.saveDocuments(serverData.documents);
+      
+      toast({
+        title: "Success",
+        description: "Server data synced to local storage. Refresh the page to see changes.",
+      });
+    } catch (error) {
+      console.error('Failed to sync data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sync data from server",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -186,22 +149,19 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
       LocalStorageManager.clearAll();
       toast({
         title: "Success",
-        description: "Local data cleared",
+        description: "Local data cleared. Refresh the page to see changes.",
       });
     }
   };
 
   const getStorageStats = () => {
-    const notes = LocalStorageManager.getNotes();
-    const tasks = LocalStorageManager.getTasks();
-    const wikis = LocalStorageManager.getWikis();
-    const projects = LocalStorageManager.getProjects();
     return {
-      notes: notes.length,
-      tasks: tasks.length,
-      wikis: wikis.length,
-      projects: projects.length,
-      totalSize: new Blob([JSON.stringify({ notes, tasks, wikis, projects })]).size,
+      notes: LocalStorageManager.getNotes().length,
+      tasks: LocalStorageManager.getTasks().length,
+      wikis: LocalStorageManager.getWikis().length,
+      projects: LocalStorageManager.getProjects().length,
+      emails: LocalStorageManager.getEmails().length,
+      documents: LocalStorageManager.getDocuments().length,
     };
   };
 
@@ -229,29 +189,15 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
         
         <Card>
           <CardHeader>
-            <CardTitle>Storage Statistics</CardTitle>
+            <CardTitle>Local Storage Statistics</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span>Notes:</span>
-              <span className="font-medium">{stats.notes}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tasks:</span>
-              <span className="font-medium">{stats.tasks}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Wiki Pages:</span>
-              <span className="font-medium">{stats.wikis}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Projects:</span>
-              <span className="font-medium">{stats.projects}</span>
-            </div>
-            <div className="flex justify-between pt-2 border-t">
-              <span>Total size:</span>
-              <span className="font-medium">{(stats.totalSize / 1024).toFixed(1)} KB</span>
-            </div>
+          <CardContent className="grid grid-cols-2 gap-2">
+            <span>Notes:</span><span className="font-medium">{stats.notes}</span>
+            <span>Tasks:</span><span className="font-medium">{stats.tasks}</span>
+            <span>Wiki Pages:</span><span className="font-medium">{stats.wikis}</span>
+            <span>Projects:</span><span className="font-medium">{stats.projects}</span>
+            <span>Emails:</span><span className="font-medium">{stats.emails}</span>
+            <span>Documents:</span><span className="font-medium">{stats.documents}</span>
           </CardContent>
         </Card>
         
@@ -261,36 +207,18 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
-              <Button
-                onClick={exportData}
-                disabled={isExporting}
-                className="flex-1"
-              >
+              <Button onClick={exportData} disabled={isExporting} className="flex-1">
                 <Download className="w-4 h-4 mr-2" />
                 {isExporting ? 'Exporting...' : 'Export Data'}
               </Button>
-              
-              <Button
-                asChild
-                variant="outline"
-                className="flex-1"
-                disabled={isImporting}
-              >
+              <Button asChild variant="outline" className="flex-1" disabled={isImporting}>
                 <label htmlFor="import-file">
                   <Upload className="w-4 h-4 mr-2" />
                   {isImporting ? 'Importing...' : 'Import Data'}
-                  <input
-                    id="import-file"
-                    type="file"
-                    accept=".json"
-                    className="hidden"
-                    onChange={importData}
-                    disabled={isImporting}
-                  />
+                  <input id="import-file" type="file" accept=".json" className="hidden" onChange={importData} disabled={isImporting} />
                 </label>
               </Button>
             </div>
-            
             <p className="text-sm text-muted-foreground">
               Export your data as JSON for backup or transfer. Import JSON files to restore data.
             </p>
@@ -302,25 +230,12 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
             <CardTitle>Sync</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
-              onClick={syncWithServer}
-              disabled={isSyncing}
-              className="w-full"
-            >
+            <Button onClick={syncWithServer} disabled={isSyncing || isOfflineMode} className="w-full">
               <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing 
-                ? 'Syncing...' 
-                : isOfflineMode 
-                  ? 'Sync Local Data to Server'
-                  : 'Sync Server Data to Local'
-              }
+              {isSyncing ? 'Syncing...' : 'Sync from Server to Local'}
             </Button>
-            
             <p className="text-sm text-muted-foreground">
-              {isOfflineMode 
-                ? 'Upload your local data to the server for backup and sharing.'
-                : 'Download server data to your local storage for offline access.'
-              }
+              Download server data to your local storage for offline access. Syncing is disabled in offline mode.
             </p>
           </CardContent>
         </Card>
@@ -330,39 +245,13 @@ export function DataManager({ isOfflineMode }: DataManagerProps) {
             <CardTitle>Local Storage</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
-              onClick={clearLocalData}
-              variant="destructive"
-              className="w-full"
-            >
+            <Button onClick={clearLocalData} variant="destructive" className="w-full">
               <Trash2 className="w-4 h-4 mr-2" />
               Clear Local Data
             </Button>
-            
             <p className="text-sm text-muted-foreground">
               Permanently delete all data stored in your browser. This action cannot be undone.
             </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Git Integration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              For version control and collaboration, you can export your data and commit it to a Git repository.
-            </p>
-            
-            <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Recommended workflow:</h4>
-              <ol className="text-sm space-y-1 list-decimal list-inside">
-                <li>Export your data regularly</li>
-                <li>Commit the JSON file to your Git repository</li>
-                <li>Share the repository with collaborators</li>
-                <li>Import updated JSON files when needed</li>
-              </ol>
-            </div>
           </CardContent>
         </Card>
       </div>
