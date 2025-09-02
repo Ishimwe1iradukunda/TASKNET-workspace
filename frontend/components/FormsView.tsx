@@ -9,18 +9,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import backend from '~backend/client';
-import type { Form, CreateFormRequest } from '~backend/workspace/forms/create';
+import { LocalStorageManager } from '../utils/localStorage';
+
+interface Form {
+  id: string;
+  name: string;
+  description?: string;
+  fields: Array<{
+    name: string;
+    type: string;
+    label: string;
+    required: boolean;
+    options?: string[];
+  }>;
+  submitAction: string;
+  submissionCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface FormsViewProps {
   isOfflineMode: boolean;
 }
 
-type FormField = CreateFormRequest['fields'][0];
+type FormField = {
+  name: string;
+  type: 'text' | 'email' | 'number' | 'textarea' | 'select' | 'checkbox' | 'date';
+  label: string;
+  required: boolean;
+  options?: string[];
+};
 
 export function FormsView({ isOfflineMode }: FormsViewProps) {
   const [forms, setForms] = useState<Form[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newForm, setNewForm] = useState<Partial<CreateFormRequest>>({
+  const [newForm, setNewForm] = useState<{
+    name: string;
+    description: string;
+    fields: FormField[];
+    submitAction: 'store_response' | 'create_task' | 'create_project';
+  }>({
     name: '',
     description: '',
     fields: [{ name: 'field1', type: 'text', label: 'Field 1', required: false }],
@@ -29,15 +57,17 @@ export function FormsView({ isOfflineMode }: FormsViewProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isOfflineMode) {
-      loadForms();
-    }
+    loadForms();
   }, [isOfflineMode]);
 
   const loadForms = async () => {
     try {
-      const response = await backend.workspace.listForms();
-      setForms(response.forms);
+      if (isOfflineMode) {
+        setForms(LocalStorageManager.getForms());
+      } else {
+        const response = await backend.workspace.listForms();
+        setForms(response.forms);
+      }
     } catch (error) {
       console.error('Failed to load forms:', error);
       toast({ title: "Error", description: "Failed to load forms", variant: "destructive" });
@@ -47,8 +77,18 @@ export function FormsView({ isOfflineMode }: FormsViewProps) {
   const createForm = async () => {
     if (!newForm.name || !newForm.fields || newForm.fields.length === 0) return;
     try {
-      const created = await backend.workspace.createForm(newForm as CreateFormRequest);
-      setForms(prev => [created, ...prev]);
+      if (isOfflineMode) {
+        const form = LocalStorageManager.createForm({
+          name: newForm.name,
+          description: newForm.description,
+          fields: newForm.fields,
+          submitAction: newForm.submitAction,
+        });
+        setForms(prev => [form, ...prev]);
+      } else {
+        const created = await backend.workspace.createForm(newForm);
+        setForms(prev => [created, ...prev]);
+      }
       setIsCreateDialogOpen(false);
       setNewForm({ name: '', description: '', fields: [{ name: 'field1', type: 'text', label: 'Field 1', required: false }], submitAction: 'store_response' });
       toast({ title: "Success", description: "Form created successfully" });
@@ -74,16 +114,6 @@ export function FormsView({ isOfflineMode }: FormsViewProps) {
     updatedFields.splice(index, 1);
     setNewForm(p => ({ ...p, fields: updatedFields }));
   };
-
-  if (isOfflineMode) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center">
-        <ClipboardList className="w-16 h-16 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium">Forms Unavailable</h3>
-        <p className="text-muted-foreground">Form management requires online mode.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full">

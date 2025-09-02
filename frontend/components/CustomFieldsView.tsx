@@ -8,7 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import backend from '~backend/client';
-import type { CustomField, CreateCustomFieldRequest } from '~backend/workspace/custom-fields/create';
+import { LocalStorageManager } from '../utils/localStorage';
+
+interface CustomField {
+  id: string;
+  name: string;
+  type: "text" | "number" | "date" | "boolean" | "select" | "multi_select";
+  options?: string[];
+  entityType: "task" | "project" | "note";
+  isRequired: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface CustomFieldsViewProps {
   isOfflineMode: boolean;
@@ -17,7 +28,13 @@ interface CustomFieldsViewProps {
 export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newField, setNewField] = useState<Partial<CreateCustomFieldRequest>>({
+  const [newField, setNewField] = useState<{
+    name: string;
+    type: "text" | "number" | "date" | "boolean" | "select" | "multi_select";
+    entityType: "task" | "project" | "note";
+    isRequired: boolean;
+    options: string[];
+  }>({
     name: '',
     type: 'text',
     entityType: 'task',
@@ -27,15 +44,17 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isOfflineMode) {
-      loadFields();
-    }
+    loadFields();
   }, [isOfflineMode]);
 
   const loadFields = async () => {
     try {
-      const response = await backend.workspace.listCustomFields({});
-      setFields(response.fields);
+      if (isOfflineMode) {
+        setFields(LocalStorageManager.getCustomFields());
+      } else {
+        const response = await backend.workspace.listCustomFields({});
+        setFields(response.fields);
+      }
     } catch (error) {
       console.error('Failed to load custom fields:', error);
       toast({
@@ -50,8 +69,19 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
     if (!newField.name || !newField.type || !newField.entityType) return;
 
     try {
-      const created = await backend.workspace.createCustomField(newField as CreateCustomFieldRequest);
-      setFields(prev => [...prev, created]);
+      if (isOfflineMode) {
+        const field = LocalStorageManager.createCustomField({
+          name: newField.name,
+          type: newField.type,
+          entityType: newField.entityType,
+          isRequired: newField.isRequired,
+          options: newField.options,
+        });
+        setFields(prev => [...prev, field]);
+      } else {
+        const created = await backend.workspace.createCustomField(newField);
+        setFields(prev => [...prev, created]);
+      }
       setIsCreateDialogOpen(false);
       setNewField({ name: '', type: 'text', entityType: 'task', isRequired: false, options: [] });
       toast({
@@ -84,18 +114,6 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
     (acc[field.entityType] = acc[field.entityType] || []).push(field);
     return acc;
   }, {} as Record<string, CustomField[]>);
-
-  if (isOfflineMode) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center">
-        <ListPlus className="w-16 h-16 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium">Custom Fields Unavailable</h3>
-        <p className="text-muted-foreground">
-          Custom field management requires online mode.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full">

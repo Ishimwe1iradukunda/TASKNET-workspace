@@ -8,7 +8,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import backend from '~backend/client';
-import type { Automation, CreateAutomationRequest } from '~backend/workspace/automations/create';
+import { LocalStorageManager } from '../utils/localStorage';
+
+interface Automation {
+  id: string;
+  name: string;
+  description?: string;
+  trigger: {
+    type: string;
+    conditions: Record<string, any>;
+  };
+  action: {
+    type: string;
+    parameters: Record<string, any>;
+  };
+  isActive: boolean;
+  executionCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 interface AutomationsViewProps {
   isOfflineMode: boolean;
@@ -17,7 +35,13 @@ interface AutomationsViewProps {
 export function AutomationsView({ isOfflineMode }: AutomationsViewProps) {
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newAutomation, setNewAutomation] = useState<Partial<CreateAutomationRequest>>({
+  const [newAutomation, setNewAutomation] = useState<{
+    name: string;
+    description: string;
+    trigger: { type: string; conditions: Record<string, any> };
+    action: { type: string; parameters: Record<string, any> };
+    isActive: boolean;
+  }>({
     name: '',
     description: '',
     trigger: { type: 'task_created', conditions: {} },
@@ -27,15 +51,17 @@ export function AutomationsView({ isOfflineMode }: AutomationsViewProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isOfflineMode) {
-      loadAutomations();
-    }
+    loadAutomations();
   }, [isOfflineMode]);
 
   const loadAutomations = async () => {
     try {
-      const response = await backend.workspace.listAutomations();
-      setAutomations(response.automations);
+      if (isOfflineMode) {
+        setAutomations(LocalStorageManager.getAutomations());
+      } else {
+        const response = await backend.workspace.listAutomations();
+        setAutomations(response.automations);
+      }
     } catch (error) {
       console.error('Failed to load automations:', error);
       toast({
@@ -50,8 +76,19 @@ export function AutomationsView({ isOfflineMode }: AutomationsViewProps) {
     if (!newAutomation.name || !newAutomation.trigger || !newAutomation.action) return;
 
     try {
-      const created = await backend.workspace.createAutomation(newAutomation as CreateAutomationRequest);
-      setAutomations(prev => [created, ...prev]);
+      if (isOfflineMode) {
+        const automation = LocalStorageManager.createAutomation({
+          name: newAutomation.name,
+          description: newAutomation.description,
+          trigger: newAutomation.trigger,
+          action: newAutomation.action,
+          isActive: newAutomation.isActive,
+        });
+        setAutomations(prev => [automation, ...prev]);
+      } else {
+        const created = await backend.workspace.createAutomation(newAutomation);
+        setAutomations(prev => [created, ...prev]);
+      }
       setIsCreateDialogOpen(false);
       setNewAutomation({
         name: '',
@@ -73,18 +110,6 @@ export function AutomationsView({ isOfflineMode }: AutomationsViewProps) {
       });
     }
   };
-
-  if (isOfflineMode) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center">
-        <Zap className="w-16 h-16 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium">Automations Unavailable</h3>
-        <p className="text-muted-foreground">
-          Automations require online mode to function.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full">

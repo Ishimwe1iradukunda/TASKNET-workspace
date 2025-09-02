@@ -5,6 +5,52 @@ import type { Project } from '~backend/workspace/projects/create';
 import type { Email } from '~backend/workspace/emails/list';
 import type { Document } from '~backend/workspace/documents/list';
 
+interface Form {
+  id: string;
+  name: string;
+  description?: string;
+  fields: Array<{
+    name: string;
+    type: string;
+    label: string;
+    required: boolean;
+    options?: string[];
+  }>;
+  submitAction: string;
+  submissionCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CustomField {
+  id: string;
+  name: string;
+  type: "text" | "number" | "date" | "boolean" | "select" | "multi_select";
+  options?: string[];
+  entityType: "task" | "project" | "note";
+  isRequired: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Automation {
+  id: string;
+  name: string;
+  description?: string;
+  trigger: {
+    type: string;
+    conditions: Record<string, any>;
+  };
+  action: {
+    type: string;
+    parameters: Record<string, any>;
+  };
+  isActive: boolean;
+  executionCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class LocalStorageManager {
   private static readonly NOTES_KEY = 'tasknetworkspace_notes';
   private static readonly TASKS_KEY = 'tasknetworkspace_tasks';
@@ -12,9 +58,12 @@ export class LocalStorageManager {
   private static readonly PROJECTS_KEY = 'tasknetworkspace_projects';
   private static readonly EMAILS_KEY = 'tasknetworkspace_emails';
   private static readonly DOCUMENTS_KEY = 'tasknetworkspace_documents';
+  private static readonly FORMS_KEY = 'tasknetworkspace_forms';
+  private static readonly CUSTOM_FIELDS_KEY = 'tasknetworkspace_custom_fields';
+  private static readonly AUTOMATIONS_KEY = 'tasknetworkspace_automations';
 
   static init() {
-    const keys = [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY];
+    const keys = [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY];
     keys.forEach(key => {
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, JSON.stringify([]));
@@ -442,6 +491,161 @@ export class LocalStorageManager {
         }
       ];
       this.saveDocuments(sampleDocuments);
+
+      // Add sample forms
+      const sampleForms = [
+        {
+          id: crypto.randomUUID(),
+          name: "Project Intake Form",
+          description: "Collect initial project requirements and details",
+          fields: [
+            { name: "project_name", type: "text", label: "Project Name", required: true },
+            { name: "description", type: "textarea", label: "Project Description", required: true },
+            { name: "priority", type: "select", label: "Priority", required: true, options: ["Low", "Medium", "High"] },
+            { name: "budget", type: "number", label: "Budget", required: false },
+            { name: "start_date", type: "date", label: "Preferred Start Date", required: false },
+            { name: "stakeholders", type: "text", label: "Key Stakeholders", required: false }
+          ],
+          submitAction: "create_project",
+          submissionCount: 12,
+          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Bug Report",
+          description: "Report bugs and issues for quick resolution",
+          fields: [
+            { name: "title", type: "text", label: "Bug Title", required: true },
+            { name: "description", type: "textarea", label: "Detailed Description", required: true },
+            { name: "severity", type: "select", label: "Severity", required: true, options: ["Low", "Medium", "High", "Critical"] },
+            { name: "browser", type: "text", label: "Browser/Device", required: false },
+            { name: "steps", type: "textarea", label: "Steps to Reproduce", required: false },
+            { name: "urgent", type: "checkbox", label: "Urgent Fix Needed", required: false }
+          ],
+          submitAction: "create_task",
+          submissionCount: 23,
+          createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Employee Feedback",
+          description: "Anonymous feedback collection for team improvement",
+          fields: [
+            { name: "department", type: "select", label: "Department", required: false, options: ["Engineering", "Marketing", "Sales", "HR", "Other"] },
+            { name: "feedback_type", type: "select", label: "Feedback Type", required: true, options: ["Suggestion", "Concern", "Compliment", "General"] },
+            { name: "feedback", type: "textarea", label: "Your Feedback", required: true },
+            { name: "anonymous", type: "checkbox", label: "Submit Anonymously", required: false },
+            { name: "follow_up", type: "checkbox", label: "Request Follow-up", required: false }
+          ],
+          submitAction: "store_response",
+          submissionCount: 8,
+          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+        }
+      ];
+      this.saveForms(sampleForms);
+
+      // Add sample custom fields
+      const sampleCustomFields = [
+        {
+          id: crypto.randomUUID(),
+          name: "Client",
+          type: "text" as const,
+          entityType: "task" as const,
+          isRequired: false,
+          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Estimated Hours",
+          type: "number" as const,
+          entityType: "task" as const,
+          isRequired: false,
+          createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Task Category",
+          type: "select" as const,
+          options: ["Development", "Design", "Marketing", "Research", "Administrative"],
+          entityType: "task" as const,
+          isRequired: false,
+          createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Project Budget",
+          type: "number" as const,
+          entityType: "project" as const,
+          isRequired: false,
+          createdAt: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Project Type",
+          type: "select" as const,
+          options: ["Internal", "Client Work", "Research", "Maintenance"],
+          entityType: "project" as const,
+          isRequired: true,
+          createdAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Review Status",
+          type: "select" as const,
+          options: ["Draft", "Under Review", "Approved", "Published"],
+          entityType: "note" as const,
+          isRequired: false,
+          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        }
+      ];
+      this.saveCustomFields(sampleCustomFields);
+
+      // Add sample automations
+      const sampleAutomations = [
+        {
+          id: crypto.randomUUID(),
+          name: "High Priority Task Notification",
+          description: "Send notification when a high priority task is created",
+          trigger: { type: "task_created", conditions: { priority: "high" } },
+          action: { type: "send_notification", parameters: { message: "High priority task created" } },
+          isActive: true,
+          executionCount: 15,
+          createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Overdue Task Reminder",
+          description: "Remind about tasks that are overdue",
+          trigger: { type: "due_date_approaching", conditions: { days_overdue: 1 } },
+          action: { type: "send_notification", parameters: { message: "Task is overdue" } },
+          isActive: true,
+          executionCount: 8,
+          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "Project Completion Follow-up",
+          description: "Create follow-up task when project is completed",
+          trigger: { type: "project_status_change", conditions: { new_status: "completed" } },
+          action: { type: "create_task", parameters: { title: "Project retrospective meeting", priority: "medium" } },
+          isActive: false,
+          executionCount: 3,
+          createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        }
+      ];
+      this.saveAutomations(sampleAutomations);
     }
   }
 
@@ -490,7 +694,6 @@ export class LocalStorageManager {
     return updatedNote;
   }
   static deleteNote = (id: string) => this.saveNotes(this.getNotes().filter(n => n.id !== id));
-  static importNotes = (newNotes: any[]) => this.saveNotes(newNotes.map(n => ({ ...n, createdAt: new Date(n.createdAt || n.created_at), updatedAt: new Date(n.updatedAt || n.updated_at) })));
 
   // Tasks management
   static getTasks(): Task[] {
@@ -519,7 +722,6 @@ export class LocalStorageManager {
     return updatedTask;
   }
   static deleteTask = (id: string) => this.saveTasks(this.getTasks().filter(t => t.id !== id));
-  static importTasks = (newTasks: any[]) => this.saveTasks(newTasks.map(t => ({ ...t, createdAt: new Date(t.createdAt || t.created_at), updatedAt: new Date(t.updatedAt || t.updated_at), dueDate: t.dueDate || t.due_date ? new Date(t.dueDate || t.due_date) : undefined })));
 
   // Wikis management
   static getWikis(): Wiki[] {
@@ -606,9 +808,60 @@ export class LocalStorageManager {
   static saveDocuments = (docs: Document[]) => this.saveItems(this.DOCUMENTS_KEY, docs);
   static deleteDocument = (id: string) => this.saveDocuments(this.getDocuments().filter(d => d.id !== id));
 
+  // Forms management
+  static getForms(): Form[] {
+    return this.getItems<Form>(this.FORMS_KEY).map(form => ({
+      ...form,
+      createdAt: new Date(form.createdAt),
+      updatedAt: new Date(form.updatedAt),
+    }));
+  }
+  static saveForms = (forms: Form[]) => this.saveItems(this.FORMS_KEY, forms);
+  static createForm(data: Omit<Form, 'id' | 'createdAt' | 'updatedAt' | 'submissionCount'>): Form {
+    const forms = this.getForms();
+    const form: Form = { ...data, id: crypto.randomUUID(), submissionCount: 0, createdAt: new Date(), updatedAt: new Date() };
+    forms.unshift(form);
+    this.saveForms(forms);
+    return form;
+  }
+
+  // Custom Fields management
+  static getCustomFields(): CustomField[] {
+    return this.getItems<CustomField>(this.CUSTOM_FIELDS_KEY).map(field => ({
+      ...field,
+      createdAt: new Date(field.createdAt),
+      updatedAt: new Date(field.updatedAt),
+    }));
+  }
+  static saveCustomFields = (fields: CustomField[]) => this.saveItems(this.CUSTOM_FIELDS_KEY, fields);
+  static createCustomField(data: Omit<CustomField, 'id' | 'createdAt' | 'updatedAt'>): CustomField {
+    const fields = this.getCustomFields();
+    const field: CustomField = { ...data, id: crypto.randomUUID(), createdAt: new Date(), updatedAt: new Date() };
+    fields.unshift(field);
+    this.saveCustomFields(fields);
+    return field;
+  }
+
+  // Automations management
+  static getAutomations(): Automation[] {
+    return this.getItems<Automation>(this.AUTOMATIONS_KEY).map(automation => ({
+      ...automation,
+      createdAt: new Date(automation.createdAt),
+      updatedAt: new Date(automation.updatedAt),
+    }));
+  }
+  static saveAutomations = (automations: Automation[]) => this.saveItems(this.AUTOMATIONS_KEY, automations);
+  static createAutomation(data: Omit<Automation, 'id' | 'createdAt' | 'updatedAt' | 'executionCount'>): Automation {
+    const automations = this.getAutomations();
+    const automation: Automation = { ...data, id: crypto.randomUUID(), executionCount: 0, createdAt: new Date(), updatedAt: new Date() };
+    automations.unshift(automation);
+    this.saveAutomations(automations);
+    return automation;
+  }
+
   // General utilities
   static clearAll() {
-    [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY].forEach(key => {
+    [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY].forEach(key => {
       localStorage.removeItem(key);
     });
     this.init();
