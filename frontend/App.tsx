@@ -9,10 +9,15 @@ import { EmailView } from './components/EmailView';
 import { CalendarView } from './components/CalendarView';
 import { DocumentsView } from './components/DocumentsView';
 import { PdfToolsView } from './components/PdfToolsView';
+import { TimeTrackingView } from './components/TimeTrackingView';
+import { PortfoliosView } from './components/PortfoliosView';
+import { SprintsView } from './components/SprintsView';
+import { GoalsView } from './components/GoalsView';
+import { EnterpriseSearchView } from './components/EnterpriseSearchView';
 import { DataManager } from './components/DataManager';
 import { LocalStorageManager } from './utils/localStorage';
 
-export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'pdf-tools' | 'data';
+export type ViewType = 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' | 'documents' | 'pdf-tools' | 'time-tracking' | 'portfolios' | 'sprints' | 'goals' | 'search' | 'data';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('notes');
@@ -42,6 +47,11 @@ function App() {
         {currentView === 'calendar' && <CalendarView isOfflineMode={isOfflineMode} />}
         {currentView === 'documents' && <DocumentsView isOfflineMode={isOfflineMode} />}
         {currentView === 'pdf-tools' && <PdfToolsView isOfflineMode={isOfflineMode} />}
+        {currentView === 'time-tracking' && <TimeTrackingView isOfflineMode={isOfflineMode} />}
+        {currentView === 'portfolios' && <PortfoliosView isOfflineMode={isOfflineMode} />}
+        {currentView === 'sprints' && <SprintsView isOfflineMode={isOfflineMode} />}
+        {currentView === 'goals' && <GoalsView isOfflineMode={isOfflineMode} />}
+        {currentView === 'search' && <EnterpriseSearchView isOfflineMode={isOfflineMode} />}
         {currentView === 'data' && <DataManager isOfflineMode={isOfflineMode} />}
       </main>
     </div>
