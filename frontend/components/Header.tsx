@@ -90,6 +90,12 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
     }
   };
 
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit(e);
+    }
+  };
+
   const NavDropdown = ({ label, items }: { label: string, items: { id: ViewType, icon: React.ElementType, label: string }[] }) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -146,6 +152,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
             className="pl-10 w-48"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
           />
         </form>
 

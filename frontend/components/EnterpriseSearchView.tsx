@@ -38,9 +38,18 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
   useEffect(() => {
     if (globalSearchQuery) {
       setSearchQuery(globalSearchQuery);
-      performSearch(globalSearchQuery);
+      performSearch(globalSearchQuery, searchType);
     }
-  }, [globalSearchQuery]);
+  }, [globalSearchQuery, isOfflineMode]);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      performSearch(searchQuery, searchType);
+    } else {
+      setResults([]);
+      setFacets({ types: [], tags: [] });
+    }
+  }, [searchType, isOfflineMode]);
 
   const performOfflineSearch = (query: string, type?: string) => {
     const searchTerm = query.toLowerCase();
@@ -55,12 +64,26 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
         const tagMatch = note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
         
         if (titleMatch || contentMatch || tagMatch) {
+          const excerptLength = 200;
+          let excerpt = note.content.substring(0, excerptLength);
+          
+          // Try to find the search term in content for better excerpt
+          const contentLower = note.content.toLowerCase();
+          const searchIndex = contentLower.indexOf(searchTerm);
+          if (searchIndex !== -1 && !titleMatch) {
+            const start = Math.max(0, searchIndex - 50);
+            const end = Math.min(note.content.length, searchIndex + searchTerm.length + 50);
+            excerpt = (start > 0 ? '...' : '') + note.content.substring(start, end) + (end < note.content.length ? '...' : '');
+          } else if (excerpt.length >= excerptLength) {
+            excerpt += '...';
+          }
+          
           results.push({
             id: note.id,
             type: 'note',
             title: note.title,
             content: note.content,
-            excerpt: note.content.substring(0, 200) + '...',
+            excerpt,
             score: titleMatch ? 1.0 : contentMatch ? 0.8 : 0.6,
             metadata: { tags: note.tags, updatedAt: note.updatedAt },
           });
@@ -77,18 +100,25 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
         const tagMatch = task.tags.some(tag => tag.toLowerCase().includes(searchTerm));
         
         if (titleMatch || descMatch || tagMatch) {
+          const description = task.description || '';
+          let excerpt = description.substring(0, 200);
+          if (excerpt.length >= 200 && description.length > 200) {
+            excerpt += '...';
+          }
+          
           results.push({
             id: task.id,
             type: 'task',
             title: task.title,
-            content: task.description || '',
-            excerpt: (task.description || '').substring(0, 200) + '...',
+            content: description,
+            excerpt: excerpt || 'No description',
             score: titleMatch ? 1.0 : descMatch ? 0.8 : 0.6,
             metadata: { 
               status: task.status, 
               priority: task.priority, 
               tags: task.tags, 
-              updatedAt: task.updatedAt 
+              updatedAt: task.updatedAt,
+              dueDate: task.dueDate
             },
           });
         }
@@ -103,12 +133,18 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
         const descMatch = project.description?.toLowerCase().includes(searchTerm);
         
         if (nameMatch || descMatch) {
+          const description = project.description || '';
+          let excerpt = description.substring(0, 200);
+          if (excerpt.length >= 200 && description.length > 200) {
+            excerpt += '...';
+          }
+          
           results.push({
             id: project.id,
             type: 'project',
             title: project.name,
-            content: project.description || '',
-            excerpt: (project.description || '').substring(0, 200) + '...',
+            content: description,
+            excerpt: excerpt || 'No description',
             score: nameMatch ? 1.0 : 0.8,
             metadata: { status: project.status, updatedAt: project.updatedAt },
           });
@@ -125,12 +161,26 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
         const tagMatch = wiki.tags.some(tag => tag.toLowerCase().includes(searchTerm));
         
         if (titleMatch || contentMatch || tagMatch) {
+          const excerptLength = 200;
+          let excerpt = wiki.content.substring(0, excerptLength);
+          
+          // Try to find the search term in content for better excerpt
+          const contentLower = wiki.content.toLowerCase();
+          const searchIndex = contentLower.indexOf(searchTerm);
+          if (searchIndex !== -1 && !titleMatch) {
+            const start = Math.max(0, searchIndex - 50);
+            const end = Math.min(wiki.content.length, searchIndex + searchTerm.length + 50);
+            excerpt = (start > 0 ? '...' : '') + wiki.content.substring(start, end) + (end < wiki.content.length ? '...' : '');
+          } else if (excerpt.length >= excerptLength) {
+            excerpt += '...';
+          }
+          
           results.push({
             id: wiki.id,
             type: 'wiki',
             title: wiki.title,
             content: wiki.content,
-            excerpt: wiki.content.substring(0, 200) + '...',
+            excerpt,
             score: titleMatch ? 1.0 : contentMatch ? 0.8 : 0.6,
             metadata: { tags: wiki.tags, updatedAt: wiki.updatedAt },
           });
@@ -147,12 +197,17 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
         const senderMatch = email.sender.toLowerCase().includes(searchTerm);
         
         if (subjectMatch || bodyMatch || senderMatch) {
+          let excerpt = email.body.substring(0, 200);
+          if (excerpt.length >= 200 && email.body.length > 200) {
+            excerpt += '...';
+          }
+          
           results.push({
             id: email.id,
             type: 'email',
             title: email.subject,
             content: email.body,
-            excerpt: email.body.substring(0, 200) + '...',
+            excerpt,
             score: subjectMatch ? 1.0 : bodyMatch ? 0.8 : 0.6,
             metadata: { sender: email.sender, isRead: email.isRead, receivedAt: email.receivedAt },
           });
@@ -184,15 +239,19 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
     return results.sort((a, b) => b.score - a.score);
   };
 
-  const search = async () => {
-    if (!searchQuery.trim()) return;
+  const performSearch = async (query: string, type?: string) => {
+    if (!query.trim()) {
+      setResults([]);
+      setFacets({ types: [], tags: [] });
+      return;
+    }
     
     setIsSearching(true);
     try {
       let searchResults: SearchResult[];
       
       if (isOfflineMode) {
-        searchResults = performOfflineSearch(searchQuery, searchType === 'all' ? undefined : searchType);
+        searchResults = performOfflineSearch(query, type === 'all' ? undefined : type);
         
         // Generate facets for offline search
         const typeCounts = searchResults.reduce((acc, result) => {
@@ -214,8 +273,8 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
         });
       } else {
         const response = await backend.workspace.enterpriseSearch({
-          query: searchQuery,
-          type: searchType === 'all' ? undefined : searchType as any,
+          query,
+          type: type === 'all' ? undefined : type as any,
           limit: 50,
         });
         searchResults = response.results;
@@ -235,9 +294,13 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
     }
   };
 
+  const handleSearch = () => {
+    performSearch(searchQuery, searchType);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      search();
+      handleSearch();
     }
   };
 
@@ -311,7 +374,7 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
               <SelectItem value="documents">Documents</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={search} disabled={isSearching || !searchQuery.trim()}>
+          <Button onClick={handleSearch} disabled={isSearching || !searchQuery.trim()}>
             {isSearching ? 'Searching...' : 'Search'}
           </Button>
         </div>
@@ -384,16 +447,42 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
                           <Badge variant="outline" className="capitalize">
                             {result.type}
                           </Badge>
+                          {result.metadata.status && (
+                            <Badge variant="secondary" className="capitalize">
+                              {result.metadata.status}
+                            </Badge>
+                          )}
+                          {result.metadata.priority && (
+                            <Badge variant={
+                              result.metadata.priority === 'high' ? 'destructive' : 
+                              result.metadata.priority === 'medium' ? 'default' : 
+                              'secondary'
+                            } className="text-xs">
+                              {result.metadata.priority}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                           {result.excerpt}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                           <span>Score: {Math.round(result.score * 100)}%</span>
                           {result.metadata.updatedAt && (
                             <>
                               <span>•</span>
                               <span>Updated {new Date(result.metadata.updatedAt).toLocaleDateString()}</span>
+                            </>
+                          )}
+                          {result.metadata.dueDate && (
+                            <>
+                              <span>•</span>
+                              <span>Due {new Date(result.metadata.dueDate).toLocaleDateString()}</span>
+                            </>
+                          )}
+                          {result.metadata.sender && (
+                            <>
+                              <span>•</span>
+                              <span>From: {result.metadata.sender}</span>
                             </>
                           )}
                           {result.metadata.tags && result.metadata.tags.length > 0 && (
@@ -403,6 +492,11 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
                                   {tag}
                                 </Badge>
                               ))}
+                              {result.metadata.tags.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{result.metadata.tags.length - 3}
+                                </Badge>
+                              )}
                             </div>
                           )}
                         </div>
@@ -430,6 +524,13 @@ export function EnterpriseSearchView({ isOfflineMode, globalSearchQuery = '' }: 
                 <p className="text-muted-foreground">
                   Enter a search term to find content across notes, tasks, projects, and more
                 </p>
+              </div>
+            )}
+            
+            {isSearching && (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Searching...</p>
               </div>
             )}
           </div>

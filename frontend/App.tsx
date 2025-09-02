@@ -45,6 +45,7 @@ function App() {
 
   const handleGlobalSearch = (query: string) => {
     setGlobalSearchQuery(query);
+    setCurrentView('search');
   };
 
   const renderView = () => {
@@ -64,7 +65,7 @@ function App() {
       case 'portfolios': return <PortfoliosView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'sprints': return <SprintsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'goals': return <GoalsView key={refreshKey} isOfflineMode={isOfflineMode} />;
-      case 'search': return <EnterpriseSearchView key={refreshKey} isOfflineMode={isOfflineMode} globalSearchQuery={globalSearchQuery} />;
+      case 'search': return <EnterpriseSearchView key={`${refreshKey}-${globalSearchQuery}`} isOfflineMode={isOfflineMode} globalSearchQuery={globalSearchQuery} />;
       case 'data': return <DataManager key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'automations': return <AutomationsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'custom-fields': return <CustomFieldsView key={refreshKey} isOfflineMode={isOfflineMode} />;
