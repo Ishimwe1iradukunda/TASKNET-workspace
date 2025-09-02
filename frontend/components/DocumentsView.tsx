@@ -151,9 +151,9 @@ export function DocumentsView({ isOfflineMode }: DocumentsViewProps) {
     } finally {
       setIsUploading(false);
       // Clear statuses after a short delay
-      setTimeout(() => setUploadStates([]), 2000);
+      setTimeout(() => setUploadStates([]), 5000);
     }
-  }, [isOfflineMode, uploadStates]);
+  }, [isOfflineMode]);
 
   const putWithProgress = (url: string, file: File, onProgress: (p: number) => void) => {
     return new Promise<void>((resolve, reject) => {
