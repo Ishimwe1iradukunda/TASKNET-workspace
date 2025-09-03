@@ -61,12 +61,13 @@ function NavSection({
             <button
               key={item.id}
               onClick={() => onViewChange(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors relative ${
                 active
-                  ? "bg-muted text-foreground"
-                  : "hover:bg-muted/60 text-foreground/90"
+                  ? "bg-primary/10 text-primary font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
             >
+              {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 bg-primary rounded-r-full" />}
               <ActiveIcon className="w-4 h-4" />
               <span className="truncate text-sm">{item.label}</span>
             </button>
@@ -110,7 +111,7 @@ export function SideMenu({ currentView, onViewChange, isOfflineMode }: SideMenuP
   const featuresItems: NavItem[] = [
     { id: "custom-fields", icon: ListPlus, label: "Custom Fields" },
     { id: "forms", icon: ClipboardList, label: "Forms" },
-    { id: "tools", icon: FileImage, label: "Tools" },
+    { id: "tools", icon: FileImage, label: "PDF Tools" },
     { id: "data", icon: Database, label: "Data Manager" },
   ];
 
