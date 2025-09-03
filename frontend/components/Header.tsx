@@ -9,6 +9,10 @@ import {
   Moon,
   Search,
   Zap,
+  ListPlus,
+  ClipboardList,
+  FileImage,
+  Database,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,8 +34,15 @@ interface HeaderProps {
   onOpenCommandPalette: () => void;
 }
 
-export function Header({ onViewChange, isOfflineMode, onOfflineModeToggle, onOpenCommandPalette }: HeaderProps) {
+export function Header({ currentView, onViewChange, isOfflineMode, onOfflineModeToggle, onOpenCommandPalette }: HeaderProps) {
   const { mode, setMode } = useTheme();
+
+  const featuresItems = [
+    { id: 'custom-fields' as ViewType, icon: ListPlus, label: 'Custom Fields' },
+    { id: 'forms' as ViewType, icon: ClipboardList, label: 'Forms' },
+    { id: 'tools' as ViewType, icon: FileImage, label: 'Tools' },
+    { id: 'data' as ViewType, icon: Database, label: 'Data Manager' },
+  ];
 
   const settingsItems = [
     { id: 'automations' as ViewType, icon: Zap, label: 'Automations' },
@@ -59,6 +70,29 @@ export function Header({ onViewChange, isOfflineMode, onOfflineModeToggle, onOpe
           <Search className="w-4 h-4" />
           Search
         </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="menu-hover menu-btn">
+              <ListPlus className="w-4 h-4 mr-2" />
+              Features
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Features</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {featuresItems.map(item => (
+              <DropdownMenuItem
+                key={item.id}
+                onClick={() => onViewChange(item.id)}
+                className="flex items-center gap-2 menu-dd-hover"
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

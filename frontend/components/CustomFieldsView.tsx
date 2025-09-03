@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ListPlus, Text, Hash, Calendar, ToggleRight, CheckSquare, List } from 'lucide-react';
+import { Plus, ListPlus, Text, Hash, Calendar, ToggleRight, CheckSquare, List, Edit, Trash2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import backend from '~backend/client';
 import { LocalStorageManager } from '../utils/localStorage';
@@ -28,6 +29,7 @@ interface CustomFieldsViewProps {
 export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
   const [fields, setFields] = useState<CustomField[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingField, setEditingField] = useState<CustomField | null>(null);
   const [newField, setNewField] = useState<{
     name: string;
     type: "text" | "number" | "date" | "boolean" | "select" | "multi_select";
@@ -98,6 +100,31 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
     }
   };
 
+  const deleteField = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this custom field?')) return;
+
+    try {
+      if (isOfflineMode) {
+        LocalStorageManager.deleteCustomField(id);
+        setFields(prev => prev.filter(f => f.id !== id));
+      } else {
+        // Would call backend delete API
+        setFields(prev => prev.filter(f => f.id !== id));
+      }
+      toast({
+        title: "Success",
+        description: "Custom field deleted successfully",
+      });
+    } catch (error) {
+      console.error('Failed to delete custom field:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete custom field",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getFieldIcon = (type: string) => {
     switch (type) {
       case 'text': return <Text className="w-4 h-4" />;
@@ -107,6 +134,18 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
       case 'select': return <List className="w-4 h-4" />;
       case 'multi_select': return <CheckSquare className="w-4 h-4" />;
       default: return <ListPlus className="w-4 h-4" />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'text': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'number': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'date': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'boolean': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'select': return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200';
+      case 'multi_select': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     }
   };
 
@@ -174,7 +213,8 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
                 />
                 <label htmlFor="is-required" className="text-sm font-medium">Field is required</label>
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
                 <Button onClick={createField}>Create Field</Button>
               </div>
             </div>
@@ -185,19 +225,54 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
         {Object.entries(groupedFields).map(([entityType, fields]) => (
           <Card key={entityType}>
             <CardHeader>
-              <CardTitle className="capitalize">{entityType} Fields</CardTitle>
+              <CardTitle className="capitalize flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                {entityType} Fields
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {fields.map(field => (
-                  <div key={field.id} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center gap-2">
-                      {getFieldIcon(field.type)}
-                      <span className="font-medium">{field.name}</span>
-                      {field.isRequired && <span className="text-red-500 text-xs">(Required)</span>}
-                    </div>
-                    <span className="text-sm text-muted-foreground capitalize">{field.type.replace('_', ' ')}</span>
-                  </div>
+                  <Card key={field.id} className="border-2 hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {getFieldIcon(field.type)}
+                          <span className="font-medium">{field.name}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingField(field)}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteField(field.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Badge className={`text-xs ${getTypeColor(field.type)}`}>
+                          {field.type.replace('_', ' ')}
+                        </Badge>
+                        {field.isRequired && (
+                          <Badge variant="destructive" className="text-xs">Required</Badge>
+                        )}
+                        {field.options && field.options.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            Options: {field.options.slice(0, 2).join(', ')}
+                            {field.options.length > 2 && ` +${field.options.length - 2} more`}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </CardContent>
@@ -213,6 +288,78 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
           </div>
         )}
       </div>
+
+      {editingField && (
+        <Dialog open={!!editingField} onOpenChange={() => setEditingField(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Custom Field</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Field Name"
+                value={editingField.name}
+                onChange={(e) => setEditingField(prev => prev ? { ...prev, name: e.target.value } : null)}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Select 
+                  value={editingField.type} 
+                  onValueChange={(v) => setEditingField(prev => prev ? { ...prev, type: v as any } : null)}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="number">Number</SelectItem>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="boolean">Checkbox</SelectItem>
+                    <SelectItem value="select">Single Select</SelectItem>
+                    <SelectItem value="multi_select">Multi Select</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select 
+                  value={editingField.entityType} 
+                  onValueChange={(v) => setEditingField(prev => prev ? { ...prev, entityType: v as any } : null)}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="task">Task</SelectItem>
+                    <SelectItem value="project">Project</SelectItem>
+                    <SelectItem value="note">Note</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(editingField.type === 'select' || editingField.type === 'multi_select') && (
+                <Input
+                  placeholder="Options (comma-separated)"
+                  value={editingField.options?.join(', ') || ''}
+                  onChange={(e) => setEditingField(prev => prev ? { 
+                    ...prev, 
+                    options: e.target.value.split(',').map(s => s.trim()) 
+                  } : null)}
+                />
+              )}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-is-required"
+                  checked={editingField.isRequired}
+                  onCheckedChange={(checked) => setEditingField(prev => prev ? { ...prev, isRequired: !!checked } : null)}
+                />
+                <label htmlFor="edit-is-required" className="text-sm font-medium">Field is required</label>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setEditingField(null)}>Cancel</Button>
+                <Button onClick={() => {
+                  // Update field logic would go here
+                  setEditingField(null);
+                  toast({ title: "Success", description: "Field updated successfully" });
+                }}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

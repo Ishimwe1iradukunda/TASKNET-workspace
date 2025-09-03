@@ -826,6 +826,7 @@ export class LocalStorageManager {
     this.saveForms(forms);
     return form;
   }
+  static deleteForm = (id: string) => this.saveForms(this.getForms().filter(f => f.id !== id));
 
   // Custom Fields management
   static getCustomFields(): CustomField[] {
@@ -843,6 +844,7 @@ export class LocalStorageManager {
     this.saveCustomFields(fields);
     return field;
   }
+  static deleteCustomField = (id: string) => this.saveCustomFields(this.getCustomFields().filter(f => f.id !== id));
 
   // Automations management
   static getAutomations(): Automation[] {
@@ -860,6 +862,7 @@ export class LocalStorageManager {
     this.saveAutomations(automations);
     return automation;
   }
+  static deleteAutomation = (id: string) => this.saveAutomations(this.getAutomations().filter(a => a.id !== id));
 
   // Reminders management
   static getReminders(): Reminder[] {
