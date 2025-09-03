@@ -71,28 +71,20 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
           Search
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="menu-hover menu-btn">
-              <ListPlus className="w-4 h-4 mr-2" />
-              Features
+        <div className="hidden lg:flex items-center gap-2 menu-group">
+          {featuresItems.map(item => (
+            <Button
+              key={item.id}
+              variant="outline"
+              size="sm"
+              className={`menu-hover menu-btn ${currentView === item.id ? 'menu-active' : ''}`}
+              onClick={() => onViewChange(item.id)}
+            >
+              <item.icon className="w-4 h-4 mr-2" />
+              {item.label}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Features</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {featuresItems.map(item => (
-              <DropdownMenuItem
-                key={item.id}
-                onClick={() => onViewChange(item.id)}
-                className="flex items-center gap-2 menu-dd-hover"
-              >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          ))}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
