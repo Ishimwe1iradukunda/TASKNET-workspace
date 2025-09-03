@@ -16,7 +16,6 @@ import {
   Columns3,
   ListPlus,
   ClipboardList,
-  FileImage,
   Settings,
   Wifi,
   WifiOff,

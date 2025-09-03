@@ -11,7 +11,6 @@ import {
   Zap,
   ListPlus,
   ClipboardList,
-  FileImage,
   Database,
   Scissors,
 } from 'lucide-react';
