@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FileText, Download, AlertTriangle, Merge, Shrink, Split, Images, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import backend from '~backend/client';
 import type { Document } from '~backend/workspace/documents/list';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDownloader } from '../hooks/useDownloader';
 
 interface PdfToolProps {
   pdfDocs: Document[];
@@ -16,17 +17,13 @@ interface PdfToolProps {
 
 type Quality = 'low' | 'medium' | 'high';
 
-const openUrl = (url: string) => {
-  const win = window.open(url, '_blank');
-  if (!win) window.location.href = url;
-};
-
 export function MergePDFs({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'pdfDocs' | 'onActionComplete'>) {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [outputName, setOutputName] = useState('merged.pdf');
   const { toast } = useToast();
+  const { downloadFile, isDownloading } = useDownloader();
 
-  const selectedIds = React.useMemo(() => Object.entries(selected).filter(([, v]) => v).map(([id]) => id), [selected]);
+  const selectedIds = useMemo(() => Object.entries(selected).filter(([, v]) => v).map(([id]) => id), [selected]);
 
   const onMerge = async () => {
     if (selectedIds.length < 2) {
@@ -35,8 +32,8 @@ export function MergePDFs({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'pdf
     }
     try {
       const r = await backend.workspace.mergePdf({ pdfIds: selectedIds, outputName: outputName || 'merged.pdf' });
-      toast({ title: 'Merged', description: 'Merged PDF ready. Opening download…' });
-      openUrl(r.downloadUrl);
+      toast({ title: 'Merged', description: 'Merged PDF ready. Starting download…' });
+      await downloadFile({ url: r.downloadUrl, filename: outputName || 'merged.pdf' });
       onActionComplete();
     } catch (err) {
       console.error('Merge failed:', err);
@@ -78,8 +75,8 @@ export function MergePDFs({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'pdf
           value={outputName}
           onChange={(e) => setOutputName(e.target.value)}
         />
-        <Button onClick={onMerge} disabled={selectedIds.length < 2} className="w-full">
-          Merge and Download
+        <Button onClick={onMerge} disabled={selectedIds.length < 2 || isDownloading} className="w-full">
+          {isDownloading ? 'Merging...' : 'Merge and Download'}
         </Button>
       </CardContent>
     </Card>
@@ -90,6 +87,7 @@ export function CompressPDF({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'p
   const [selected, setSelected] = useState<string>('');
   const [quality, setQuality] = useState<Quality>('medium');
   const { toast } = useToast();
+  const { downloadFile, isDownloading } = useDownloader();
 
   const onCompress = async () => {
     if (!selected) {
@@ -99,7 +97,9 @@ export function CompressPDF({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'p
     try {
       const r = await backend.workspace.compressPdf({ pdfId: selected, quality: quality });
       toast({ title: 'Compressed', description: `Compression ratio: ${r.compressionRatio}%` });
-      openUrl(r.downloadUrl);
+      const selectedDoc = pdfDocs.find(d => d.id === selected);
+      const filename = `compressed_${selectedDoc?.name || 'file.pdf'}`;
+      await downloadFile({ url: r.downloadUrl, filename });
       onActionComplete();
     } catch (err) {
       console.error('Compress failed:', err);
@@ -136,8 +136,8 @@ export function CompressPDF({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'p
             <SelectItem value="high">High (best quality)</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={onCompress} disabled={!selected} className="w-full">
-          Compress and Download
+        <Button onClick={onCompress} disabled={!selected || isDownloading} className="w-full">
+          {isDownloading ? 'Compressing...' : 'Compress and Download'}
         </Button>
       </CardContent>
     </Card>
@@ -150,6 +150,7 @@ export function SplitPDF({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'pdfD
   const [pages, setPages] = useState('1,2,3');
   const [ranges, setRanges] = useState('1-3;5-7');
   const { toast } = useToast();
+  const { downloadFile, isDownloading } = useDownloader();
 
   const parsePages = (s: string) => {
     return s.split(',').map(x => parseInt(x.trim(), 10)).filter(n => Number.isFinite(n) && n > 0);
@@ -174,24 +175,25 @@ export function SplitPDF({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'pdfD
       return;
     }
     try {
+      let r;
       if (splitType === 'pages') {
         const parsed = parsePages(pages);
         if (parsed.length === 0) {
           toast({ title: 'Invalid pages', description: 'Provide a comma-separated list like: 1,3,5', variant: 'destructive' });
           return;
         }
-        const r = await backend.workspace.splitPdf({ pdfId: selected, splitType: 'pages', pages: parsed });
-        toast({ title: 'Split complete', description: `Created ${r.files.length} files. Opening first…` });
-        if (r.files[0]?.downloadUrl) openUrl(r.files[0].downloadUrl);
+        r = await backend.workspace.splitPdf({ pdfId: selected, splitType: 'pages', pages: parsed });
       } else {
         const parsed = parseRanges(ranges);
         if (parsed.length === 0) {
           toast({ title: 'Invalid ranges', description: 'Provide ranges like: 1-3;5-7 or 10-12|chapter-2', variant: 'destructive' });
           return;
         }
-        const r = await backend.workspace.splitPdf({ pdfId: selected, splitType: 'ranges', ranges: parsed });
-        toast({ title: 'Split complete', description: `Created ${r.files.length} files. Opening first…` });
-        if (r.files[0]?.downloadUrl) openUrl(r.files[0].downloadUrl);
+        r = await backend.workspace.splitPdf({ pdfId: selected, splitType: 'ranges', ranges: parsed });
+      }
+      toast({ title: 'Split complete', description: `Created ${r.files.length} files. Downloading first…` });
+      if (r.files[0]?.downloadUrl) {
+        await downloadFile({ url: r.files[0].downloadUrl, filename: r.files[0].filename });
       }
       onActionComplete();
     } catch (err) {
@@ -246,8 +248,8 @@ export function SplitPDF({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'pdfD
             onChange={(e) => setRanges(e.target.value)}
           />
         )}
-        <Button onClick={onSplit} disabled={!selected} className="w-full">
-          Split and Download
+        <Button onClick={onSplit} disabled={!selected || isDownloading} className="w-full">
+          {isDownloading ? 'Splitting...' : 'Split and Download'}
         </Button>
       </CardContent>
     </Card>
@@ -258,8 +260,9 @@ export function ImagesToPDF({ imageDocs, onActionComplete }: Pick<PdfToolProps, 
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [outputName, setOutputName] = useState('images.pdf');
   const { toast } = useToast();
+  const { downloadFile, isDownloading } = useDownloader();
 
-  const selectedIds = React.useMemo(() => Object.entries(selected).filter(([, v]) => v).map(([id]) => id), [selected]);
+  const selectedIds = useMemo(() => Object.entries(selected).filter(([, v]) => v).map(([id]) => id), [selected]);
 
   const onConvert = async () => {
     if (selectedIds.length === 0) {
@@ -268,8 +271,8 @@ export function ImagesToPDF({ imageDocs, onActionComplete }: Pick<PdfToolProps, 
     }
     try {
       const r = await backend.workspace.convertImageToPdf({ imageIds: selectedIds, outputName: outputName || 'images.pdf' });
-      toast({ title: 'Converted', description: 'Images combined into a PDF. Opening…' });
-      openUrl(r.downloadUrl);
+      toast({ title: 'Converted', description: 'Images combined into a PDF. Starting download…' });
+      await downloadFile({ url: r.downloadUrl, filename: outputName || 'images.pdf' });
       onActionComplete();
     } catch (err) {
       console.error('Images->PDF failed:', err);
@@ -311,8 +314,8 @@ export function ImagesToPDF({ imageDocs, onActionComplete }: Pick<PdfToolProps, 
           value={outputName}
           onChange={(e) => setOutputName(e.target.value)}
         />
-        <Button onClick={onConvert} disabled={selectedIds.length === 0} className="w-full">
-          Convert and Download
+        <Button onClick={onConvert} disabled={selectedIds.length === 0 || isDownloading} className="w-full">
+          {isDownloading ? 'Converting...' : 'Convert and Download'}
         </Button>
       </CardContent>
     </Card>
@@ -325,6 +328,7 @@ export function PDFToImages({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'p
   const [quality, setQuality] = useState<number>(90);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const { toast } = useToast();
+  const { isDownloading } = useDownloader();
 
   const onConvert = async () => {
     if (!selected) {
@@ -384,8 +388,8 @@ export function PDFToImages({ pdfDocs, onActionComplete }: Pick<PdfToolProps, 'p
             placeholder="Quality (1-100)"
           />
         </div>
-        <Button onClick={onConvert} disabled={!selected}>
-          Convert
+        <Button onClick={onConvert} disabled={!selected || isDownloading}>
+          {isDownloading ? 'Converting...' : 'Convert'}
         </Button>
         {generatedImages.length > 0 && (
           <div className="space-y-2">

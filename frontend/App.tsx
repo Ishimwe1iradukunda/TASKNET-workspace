@@ -28,6 +28,7 @@ import { PlannerView } from './components/PlannerView';
 import { ChatView } from './components/ChatView';
 import { RemindersView } from './components/RemindersView';
 import { SideMenu } from './components/SideMenu';
+import { Footer } from './components/Footer';
 
 export type ViewType = 
   | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
@@ -133,6 +134,7 @@ function App() {
     <ThemeProvider>
       <div className="flex flex-col h-screen bg-background text-foreground transition-colors duration-200">
         <AppInner />
+        <Footer />
       </div>
     </ThemeProvider>
   );

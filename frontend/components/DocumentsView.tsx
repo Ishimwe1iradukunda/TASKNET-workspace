@@ -9,6 +9,7 @@ import type { Document } from '~backend/workspace/documents/list';
 import { useUploader } from '../hooks/useUploader';
 import { UploadProgress } from './UploadProgress';
 import { Dropzone } from './Dropzone';
+import { useDownloader } from '../hooks/useDownloader';
 
 interface DocumentsViewProps {
   isOfflineMode: boolean;
@@ -17,6 +18,7 @@ interface DocumentsViewProps {
 export function DocumentsView({ isOfflineMode }: DocumentsViewProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const { toast } = useToast();
+  const { downloadFile, isDownloading: isDocDownloading } = useDownloader();
 
   const loadDocuments = async () => {
     try {
@@ -65,7 +67,7 @@ export function DocumentsView({ isOfflineMode }: DocumentsViewProps) {
     }
   };
 
-  const handleDownloadDocument = async (id: string) => {
+  const handleDownloadDocument = async (doc: Document) => {
     if (isOfflineMode) {
       toast({
         title: 'Offline Mode',
@@ -75,10 +77,31 @@ export function DocumentsView({ isOfflineMode }: DocumentsViewProps) {
       return;
     }
     try {
-      const { downloadUrl } = await backend.workspace.getDocument({ id });
+      const { downloadUrl } = await backend.workspace.getDocument({ id: doc.id });
+      await downloadFile({ url: downloadUrl, filename: doc.name });
+    } catch (error) {
+      console.error('Failed to get download URL:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to get download URL',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handlePreviewDocument = async (doc: Document) => {
+    if (isOfflineMode) {
+      toast({
+        title: 'Offline Mode',
+        description: 'Preview is not available in offline mode.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      const { downloadUrl } = await backend.workspace.getDocument({ id: doc.id });
       const win = window.open(downloadUrl, '_blank');
       if (!win) {
-        // Popup blocked
         window.location.href = downloadUrl;
       }
     } catch (error) {
@@ -159,8 +182,8 @@ export function DocumentsView({ isOfflineMode }: DocumentsViewProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDownloadDocument(doc.id)}
-                      disabled={isOfflineMode}
+                      onClick={() => handleDownloadDocument(doc)}
+                      disabled={isOfflineMode || isDocDownloading}
                       title="Download"
                     >
                       <Download className="w-4 h-4" />
@@ -168,7 +191,7 @@ export function DocumentsView({ isOfflineMode }: DocumentsViewProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDownloadDocument(doc.id)}
+                      onClick={() => handlePreviewDocument(doc)}
                       disabled={isOfflineMode}
                       title="Preview"
                     >
