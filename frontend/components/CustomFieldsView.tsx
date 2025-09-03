@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, ListPlus, Text, Hash, Calendar, ToggleRight, CheckSquare, List, Edit, Trash2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -171,6 +171,9 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Custom Field</DialogTitle>
+              <DialogDescription>
+                Add a new custom field to extend your tasks, projects, or notes.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <Input
@@ -294,6 +297,9 @@ export function CustomFieldsView({ isOfflineMode }: CustomFieldsViewProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Custom Field</DialogTitle>
+              <DialogDescription>
+                Modify the properties of this custom field.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <Input

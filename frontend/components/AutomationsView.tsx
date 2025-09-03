@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Zap, ToggleLeft, ToggleRight, Play, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -128,6 +128,9 @@ export function AutomationsView({ isOfflineMode }: AutomationsViewProps) {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Automation</DialogTitle>
+              <DialogDescription>
+                Set up a new trigger and action to automate your workflow.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <Input

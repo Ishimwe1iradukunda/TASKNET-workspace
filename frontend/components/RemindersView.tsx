@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Bell, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
@@ -117,7 +117,12 @@ export function RemindersView({ isOfflineMode }: RemindersViewProps) {
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Create New Reminder</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Create New Reminder</DialogTitle>
+              <DialogDescription>
+                Set a reminder for an important event or task.
+              </DialogDescription>
+            </DialogHeader>
             <div className="space-y-4">
               <Input placeholder="Title" value={newReminder.title} onChange={(e) => setNewReminder(p => ({ ...p, title: e.target.value }))} />
               <Textarea placeholder="Description (optional)" value={newReminder.description} onChange={(e) => setNewReminder(p => ({ ...p, description: e.target.value }))} />

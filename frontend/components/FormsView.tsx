@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, ClipboardList, X, Text, Mail, Hash, Calendar, CheckSquare, List, Eye, Edit, Trash2, BarChart3, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -212,6 +212,9 @@ export function FormsView({ isOfflineMode }: FormsViewProps) {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>Create New Form</DialogTitle>
+              <DialogDescription>
+                Build a new form to collect data or trigger actions.
+              </DialogDescription>
             </DialogHeader>
             <Tabs defaultValue="builder" className="flex-1">
               <TabsList className="grid w-full grid-cols-2">
@@ -378,6 +381,9 @@ export function FormsView({ isOfflineMode }: FormsViewProps) {
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Form Preview</DialogTitle>
+              <DialogDescription>
+                This is a preview of how your form will look to users.
+              </DialogDescription>
             </DialogHeader>
             {renderFormPreview(previewForm)}
           </DialogContent>
@@ -390,6 +396,9 @@ export function FormsView({ isOfflineMode }: FormsViewProps) {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>Edit Form</DialogTitle>
+              <DialogDescription>
+                Editing forms will be available in a future update.
+              </DialogDescription>
             </DialogHeader>
             <div className="text-center py-8">
               <ClipboardList className="w-12 h-12 mx-auto text-muted-foreground mb-4" />

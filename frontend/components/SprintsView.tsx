@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Target, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -144,6 +144,9 @@ export function SprintsView({ isOfflineMode }: SprintsViewProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Sprint</DialogTitle>
+              <DialogDescription>
+                Plan a new sprint for your agile workflow.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <Input

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, FileText, CheckSquare, FolderOpen, BookOpen, Mail, Database } from "lucide-react";
@@ -209,9 +209,12 @@ export function CommandPalette({ open, onOpenChange, isOfflineMode, onNavigate }
             Search
             <span className="ml-auto text-xs text-muted-foreground">Ctrl/⌘ + K</span>
           </DialogTitle>
+          <DialogDescription>
+            Search across your workspace. Use arrow keys to navigate, Enter to select.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="px-4 pb-3">
+        <div className="px-4 pt-2 pb-3">
           <Input
             ref={inputRef}
             value={q}

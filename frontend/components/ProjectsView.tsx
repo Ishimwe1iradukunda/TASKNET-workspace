@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
@@ -214,6 +214,9 @@ export function ProjectsView({ isOfflineMode }: ProjectsViewProps) {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>
+                  Start a new project to organize your tasks and resources.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <Input
@@ -372,6 +375,9 @@ export function ProjectsView({ isOfflineMode }: ProjectsViewProps) {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Project</DialogTitle>
+              <DialogDescription>
+                Make changes to your project details.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <Input

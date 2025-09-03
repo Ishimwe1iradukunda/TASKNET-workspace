@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -258,6 +258,9 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Wiki Page</DialogTitle>
+                <DialogDescription>
+                  Add a new page to your knowledge base. You can link to other pages.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <Input
@@ -377,6 +380,9 @@ export function WikisView({ isOfflineMode }: WikisViewProps) {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Edit Wiki Page</DialogTitle>
+              <DialogDescription>
+                Make changes to this wiki page. Markdown is supported.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <Input

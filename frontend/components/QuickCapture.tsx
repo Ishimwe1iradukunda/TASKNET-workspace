@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { LocalStorageManager } from '../utils/localStorage';
@@ -140,6 +140,9 @@ export function QuickCapture({ isOfflineMode, onItemCreated }: QuickCaptureProps
               <Zap className="w-5 h-5" />
               Quick Capture
             </DialogTitle>
+            <DialogDescription>
+              Quickly add a new task, note, or idea to your workspace.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
