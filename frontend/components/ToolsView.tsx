@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { QrCode, Mic, FileImage, Scissors, Archive, Merge, Download, Upload, Link, Palette, Hash, Type, Calendar } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { QrCode, Mic, FileImage, Scissors, Archive, Merge, Download, Upload, Link, Palette, Hash, Type, Calendar, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,9 +16,19 @@ interface ToolsViewProps {
   isOfflineMode: boolean;
 }
 
+type UploadState =
+  | { status: 'idle' }
+  | { status: 'uploading'; fileName: string; progress: number }
+  | { status: 'done'; fileName: string }
+  | { status: 'error'; fileName: string; error: string };
+
 export function ToolsView({ isOfflineMode }: ToolsViewProps) {
   const { toast } = useToast();
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [uploadStates, setUploadStates] = useState<UploadState[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadDocuments = async () => {
     if (isOfflineMode) return;
@@ -34,6 +44,126 @@ export function ToolsView({ isOfflineMode }: ToolsViewProps) {
   useEffect(() => {
     loadDocuments();
   }, [isOfflineMode]);
+
+  const handleFileInputChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) return;
+    await uploadFiles(files);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (isOfflineMode) {
+      toast({
+        title: 'Offline Mode',
+        description: 'File uploads are disabled in offline mode.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const dt = e.dataTransfer;
+    const files = Array.from(dt.files ?? []);
+    if (files.length === 0) return;
+    await uploadFiles(files);
+  };
+
+  const uploadFiles = useCallback(async (files: File[]) => {
+    if (isOfflineMode) {
+      toast({
+        title: 'Offline Mode',
+        description: 'File uploads are disabled in offline mode.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadStates(files.map((f) => ({ status: 'uploading', fileName: f.name, progress: 0 })));
+
+    try {
+      for (let idx = 0; idx < files.length; idx++) {
+        const file = files[idx];
+        let uploadUrl: string;
+        try {
+          const resp = await backend.workspace.getUploadUrl({
+            name: file.name,
+            type: file.type || 'application/octet-stream',
+            size: file.size,
+          });
+          uploadUrl = resp.uploadUrl;
+        } catch (err) {
+          console.error('Failed to get upload URL:', err);
+          setUploadStates((prev) =>
+            prev.map((s, i) =>
+              i === idx ? { status: 'error', fileName: file.name, error: 'Failed to get upload URL' } : s
+            )
+          );
+          continue;
+        }
+
+        try {
+          await putWithProgress(uploadUrl, file, (progress) => {
+            setUploadStates((prev) =>
+              prev.map((s, i) =>
+                i === idx && s.status === 'uploading' ? { ...s, progress } : s
+              )
+            );
+          });
+          setUploadStates((prev) =>
+            prev.map((s, i) => (i === idx ? { status: 'done', fileName: file.name } : s))
+          );
+        } catch (err) {
+          console.error('Failed to upload file:', err);
+          setUploadStates((prev) =>
+            prev.map((s, i) =>
+              i === idx ? { status: 'error', fileName: file.name, error: 'Upload failed' } : s
+            )
+          );
+          continue;
+        }
+      }
+
+      await loadDocuments();
+
+      const anyError = uploadStates.some((s) => s.status === 'error');
+      if (!anyError) {
+        toast({ title: 'Success', description: 'All files uploaded successfully' });
+      } else {
+        toast({
+          title: 'Partial success',
+          description: 'Some files failed to upload',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsUploading(false);
+      setTimeout(() => setUploadStates([]), 5000);
+    }
+  }, [isOfflineMode, toast]);
+
+  const putWithProgress = (url: string, file: File, onProgress: (p: number) => void) => {
+    return new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onProgress(percent);
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Upload failed with status ${xhr.status}`));
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.onabort = () => reject(new Error('Upload aborted'));
+      xhr.send(file);
+    });
+  };
 
   const pdfDocs = useMemo(
     () => documents.filter(d => (d.fileType || '').toLowerCase().includes('pdf')),
@@ -90,6 +220,64 @@ export function ToolsView({ isOfflineMode }: ToolsViewProps) {
           </TabsContent>
           
           <TabsContent value="media" className="space-y-6">
+            {!isOfflineMode && (
+              <div
+                className={`mb-6 rounded-lg border-2 border-dashed transition-colors ${
+                  isDragging ? 'border-primary bg-primary/5' : 'border-border'
+                }`}
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                onDrop={handleDrop}
+              >
+                <div className="flex flex-col items-center justify-center p-6 text-center">
+                  <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
+                  <div className="text-sm text-muted-foreground mb-2">
+                    Drag and drop files here, or
+                  </div>
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {isUploading ? 'Uploading...' : 'Upload Files'}
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileInputChange}
+                    multiple
+                    disabled={isUploading}
+                  />
+                </div>
+              </div>
+            )}
+
+            {uploadStates.length > 0 && (
+              <div className="space-y-2 mb-6">
+                {uploadStates.map((s, i) => (
+                  <div key={`${s.fileName}-${i}`} className="flex items-center justify-between rounded-md border p-3">
+                    <div className="flex items-center gap-3">
+                      {s.status === 'uploading' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                      {s.status === 'done' && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+                      {s.status === 'error' && <XCircle className="w-4 h-4 text-red-600" />}
+                      <div>
+                        <div className="text-sm font-medium truncate max-w-[300px]">{s.fileName}</div>
+                        {s.status === 'uploading' && <div className="text-xs text-muted-foreground">{s.progress}% uploading...</div>}
+                        {s.status === 'error' && <div className="text-xs text-red-600">{s.error}</div>}
+                        {s.status === 'done' && <div className="text-xs text-green-700">Uploaded successfully</div>}
+                      </div>
+                    </div>
+                    {s.status === 'uploading' && (
+                      <div className="w-40 h-2 rounded bg-muted overflow-hidden">
+                        <div className="h-2 bg-primary transition-all" style={{ width: `${(s as any).progress ?? 0}%` }} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <SoundRecorder />
               <ImageResizer />
