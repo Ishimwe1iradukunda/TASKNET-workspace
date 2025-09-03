@@ -111,7 +111,7 @@ export function SideMenu({ currentView, onViewChange, isOfflineMode }: SideMenuP
   const featuresItems: NavItem[] = [
     { id: "custom-fields", icon: ListPlus, label: "Custom Fields" },
     { id: "forms", icon: ClipboardList, label: "Forms" },
-    { id: "tools", icon: FileImage, label: "PDF Tools" },
+    { id: "tools", icon: FileImage, label: "Tools" },
     { id: "data", icon: Database, label: "Data Manager" },
   ];
 
