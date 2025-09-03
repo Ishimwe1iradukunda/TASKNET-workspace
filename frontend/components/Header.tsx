@@ -41,8 +41,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
   const featuresItems = [
     { id: 'custom-fields' as ViewType, icon: ListPlus, label: 'Custom Fields' },
     { id: 'forms' as ViewType, icon: ClipboardList, label: 'Forms' },
-    { id: 'pdf' as ViewType, icon: Scissors, label: 'PDF' },
-    { id: 'tools' as ViewType, icon: FileImage, label: 'Tools' },
+    { id: 'tools' as ViewType, icon: Scissors, label: 'Tools' },
     { id: 'data' as ViewType, icon: Database, label: 'Data Manager' },
   ];
 

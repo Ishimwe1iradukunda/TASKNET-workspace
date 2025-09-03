@@ -28,13 +28,12 @@ import { PlannerView } from './components/PlannerView';
 import { ChatView } from './components/ChatView';
 import { RemindersView } from './components/RemindersView';
 import { SideMenu } from './components/SideMenu';
-import { PdfView } from './components/PdfView';
 
 export type ViewType = 
   | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
   | 'documents' | 'tools' | 'time-tracking' | 'portfolios' | 'sprints' 
   | 'goals' | 'data' | 'dashboard' | 'activity' | 'automations' 
-  | 'custom-fields' | 'forms' | 'planner' | 'chat' | 'reminders' | 'pdf';
+  | 'custom-fields' | 'forms' | 'planner' | 'chat' | 'reminders';
 
 function AppInner() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -92,7 +91,6 @@ function AppInner() {
       case 'planner': return <PlannerView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'chat': return <ChatView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'reminders': return <RemindersView key={refreshKey} isOfflineMode={isOfflineMode} />;
-      case 'pdf': return <PdfView key={refreshKey} isOfflineMode={isOfflineMode} />;
       default: return <DashboardView key={refreshKey} isOfflineMode={isOfflineMode} onViewChange={setCurrentView} />;
     }
   };

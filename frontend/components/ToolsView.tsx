@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { QrCode, Mic, FileImage, Scissors, Archive, Merge, Download, Upload, Link, Palette, Hash, Type, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import QRCode from 'qrcode.react';
+import backend from '~backend/client';
+import type { Document } from '~backend/workspace/documents/list';
+import { MergePDFs, CompressPDF, SplitPDF, ImagesToPDF, PDFToImages } from './PdfTools';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ToolsViewProps {
   isOfflineMode: boolean;
@@ -14,6 +18,31 @@ interface ToolsViewProps {
 
 export function ToolsView({ isOfflineMode }: ToolsViewProps) {
   const { toast } = useToast();
+  const [documents, setDocuments] = useState<Document[]>([]);
+
+  const loadDocuments = async () => {
+    if (isOfflineMode) return;
+    try {
+      const resp = await backend.workspace.listDocuments();
+      setDocuments(resp.documents);
+    } catch (err) {
+      console.error('Failed to load documents:', err);
+      toast({ title: 'Error', description: 'Failed to load documents', variant: 'destructive' });
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, [isOfflineMode]);
+
+  const pdfDocs = useMemo(
+    () => documents.filter(d => (d.fileType || '').toLowerCase().includes('pdf')),
+    [documents]
+  );
+  const imageDocs = useMemo(
+    () => documents.filter(d => (d.fileType || '').toLowerCase().startsWith('image/')),
+    [documents]
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -25,12 +54,12 @@ export function ToolsView({ isOfflineMode }: ToolsViewProps) {
       </div>
       
       <div className="flex-1 overflow-auto p-6">
-        <Tabs defaultValue="generators" className="w-full">
+        <Tabs defaultValue="media" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="generators">Generators</TabsTrigger>
             <TabsTrigger value="converters">Converters</TabsTrigger>
             <TabsTrigger value="utilities">Utilities</TabsTrigger>
-            <TabsTrigger value="media">Media</TabsTrigger>
+            <TabsTrigger value="media">Media &amp; PDF</TabsTrigger>
           </TabsList>
           
           <TabsContent value="generators" className="space-y-6">
@@ -64,8 +93,12 @@ export function ToolsView({ isOfflineMode }: ToolsViewProps) {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <SoundRecorder />
               <ImageResizer />
-              <PDFTools />
               <FileConverter />
+              <MergePDFs pdfDocs={pdfDocs} onActionComplete={loadDocuments} />
+              <CompressPDF pdfDocs={pdfDocs} onActionComplete={loadDocuments} />
+              <SplitPDF pdfDocs={pdfDocs} onActionComplete={loadDocuments} />
+              <ImagesToPDF imageDocs={imageDocs} onActionComplete={loadDocuments} />
+              <PDFToImages pdfDocs={pdfDocs} onActionComplete={loadDocuments} />
             </div>
           </TabsContent>
         </Tabs>
@@ -871,45 +904,78 @@ function ImageResizer() {
   );
 }
 
-function PDFTools() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Scissors className="w-5 h-5" />
-          PDF Tools
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-center py-8">
-          <Scissors className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">PDF tools coming soon!</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Merge, split, compress, and convert PDF files.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function FileConverter() {
+  const [file, setFile] = useState<File | null>(null);
+  const [outputFormat, setOutputFormat] = useState('jpeg');
+  const [quality, setQuality] = useState(0.9);
+  const [convertedUrl, setConvertedUrl] = useState('');
+  const { toast } = useToast();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setConvertedUrl('');
+    }
+  };
+
+  const convertFile = () => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0);
+        const mimeType = `image/${outputFormat}`;
+        const dataUrl = canvas.toDataURL(mimeType, quality);
+        setConvertedUrl(dataUrl);
+        toast({ title: 'Conversion successful!' });
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Archive className="w-5 h-5" />
-          File Converter
+          Image File Converter
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-center py-8">
-          <Archive className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">File converter coming soon!</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Convert between different file formats.
-          </p>
-        </div>
+        <Input type="file" accept="image/*" onChange={handleFileChange} />
+        {file && (
+          <>
+            <Select value={outputFormat} onValueChange={setOutputFormat}>
+              <SelectTrigger><SelectValue placeholder="Output format" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="jpeg">JPEG</SelectItem>
+                <SelectItem value="png">PNG</SelectItem>
+                <SelectItem value="webp">WEBP</SelectItem>
+              </SelectContent>
+            </Select>
+            {(outputFormat === 'jpeg' || outputFormat === 'webp') && (
+              <div>
+                <label className="text-sm">Quality: {Math.round(quality * 100)}%</label>
+                <Input type="range" min="0.1" max="1" step="0.1" value={quality} onChange={e => setQuality(parseFloat(e.target.value))} />
+              </div>
+            )}
+            <Button onClick={convertFile} className="w-full">Convert</Button>
+            {convertedUrl && (
+              <a href={convertedUrl} download={`converted.${outputFormat}`}>
+                <Button variant="outline" className="w-full">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Converted Image
+                </Button>
+              </a>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );
