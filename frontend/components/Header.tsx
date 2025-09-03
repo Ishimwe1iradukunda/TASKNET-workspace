@@ -13,6 +13,7 @@ import {
   ClipboardList,
   FileImage,
   Database,
+  Scissors,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +41,7 @@ export function Header({ currentView, onViewChange, isOfflineMode, onOfflineMode
   const featuresItems = [
     { id: 'custom-fields' as ViewType, icon: ListPlus, label: 'Custom Fields' },
     { id: 'forms' as ViewType, icon: ClipboardList, label: 'Forms' },
+    { id: 'pdf' as ViewType, icon: Scissors, label: 'PDF' },
     { id: 'tools' as ViewType, icon: FileImage, label: 'Tools' },
     { id: 'data' as ViewType, icon: Database, label: 'Data Manager' },
   ];
