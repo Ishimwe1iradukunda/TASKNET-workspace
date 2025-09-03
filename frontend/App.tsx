@@ -27,6 +27,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { PlannerView } from './components/PlannerView';
 import { ChatView } from './components/ChatView';
 import { RemindersView } from './components/RemindersView';
+import { SideMenu } from './components/SideMenu';
 
 export type ViewType = 
   | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
@@ -104,9 +105,16 @@ function AppInner() {
         onOpenCommandPalette={() => setIsPaletteOpen(true)}
       />
       
-      <main className="flex-1 overflow-hidden transition-colors duration-200">
-        {renderView()}
-      </main>
+      <div className="flex flex-1 overflow-hidden">
+        <SideMenu
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          isOfflineMode={isOfflineMode}
+        />
+        <main className="flex-1 overflow-hidden transition-colors duration-200">
+          {renderView()}
+        </main>
+      </div>
 
       <QuickCapture isOfflineMode={isOfflineMode} onItemCreated={handleItemCreated} />
 
