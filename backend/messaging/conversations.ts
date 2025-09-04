@@ -3,6 +3,9 @@ import { db } from "./db";
 import { workspace } from "~encore/clients";
 import type { User } from "../workspace/users/list";
 import type { ConversationSummary, ConversationDetails, ChatMessage } from "./api";
+import { SQLDatabase } from "encore.dev/storage/sqldb";
+
+const workspaceDB = SQLDatabase.named("workspace");
 
 // === List Conversations (Inbox) ===
 
@@ -95,6 +98,7 @@ export const listConversations = api<void, ListConversationsResponse>({
 
 export interface CreateConversationRequest {
   userIds: string[];
+  invitedEmails?: string[];
   name?: string;
 }
 
@@ -103,9 +107,31 @@ export const createConversation = api<CreateConversationRequest, ConversationSum
   expose: true,
   method: "POST",
   path: "/conversations",
-}, async ({ userIds, name }) => {
+}, async ({ userIds, invitedEmails, name }) => {
   const currentUserId = 'user-1';
   const allParticipantIds = [...new Set([currentUserId, ...userIds])];
+
+  if (invitedEmails && invitedEmails.length > 0) {
+    for (const email of invitedEmails) {
+      if (!email.includes('@')) continue; // basic email validation
+      let user = await workspaceDB.queryRow<{ id: string }>`
+        SELECT id FROM users WHERE email = ${email}
+      `;
+      if (!user) {
+        // Create a new user
+        const newUserId = crypto.randomUUID();
+        const newUserName = email.split('@')[0]; // Simple name generation
+        await workspaceDB.exec`
+          INSERT INTO users (id, name, email, avatar_url)
+          VALUES (${newUserId}, ${newUserName}, ${email}, ${`https://i.pravatar.cc/150?u=${newUserId}`})
+        `;
+        user = { id: newUserId };
+      }
+      if (!allParticipantIds.includes(user.id)) {
+        allParticipantIds.push(user.id);
+      }
+    }
+  }
 
   if (allParticipantIds.length < 2) {
     throw APIError.invalidArgument("A conversation must have at least two participants.");

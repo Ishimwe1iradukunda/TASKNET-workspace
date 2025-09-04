@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Paperclip, Download, FileText, Plus, Users, UserPlus, XCircle, Check } from 'lucide-react';
+import { Send, MessageSquare, Paperclip, Download, FileText, Plus, Users, UserPlus, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -101,9 +101,9 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
     }
   };
 
-  const handleCreateConversation = async (userIds: string[], name?: string) => {
+  const handleCreateConversation = async (userIds: string[], name?: string, invitedEmails?: string[]) => {
     try {
-      const newConvo = await backend.messaging.createConversation({ userIds, name });
+      const newConvo = await backend.messaging.createConversation({ userIds, name, invitedEmails });
       setIsNewConvoOpen(false);
       await loadConversations();
       await selectConversation(newConvo);
@@ -260,13 +260,15 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
 interface NewConversationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (userIds: string[], name?: string) => void;
+  onCreate: (userIds: string[], name?: string, invitedEmails?: string[]) => void;
 }
 
 function NewConversationDialog({ open, onOpenChange, onCreate }: NewConversationDialogProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [groupName, setGroupName] = useState('');
+  const [invitedEmails, setInvitedEmails] = useState<string[]>([]);
+  const [emailInput, setEmailInput] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -276,6 +278,8 @@ function NewConversationDialog({ open, onOpenChange, onCreate }: NewConversation
     } else {
       setSelectedUsers([]);
       setGroupName('');
+      setInvitedEmails([]);
+      setEmailInput('');
     }
   }, [open]);
 
@@ -287,37 +291,75 @@ function NewConversationDialog({ open, onOpenChange, onCreate }: NewConversation
     );
   };
 
-  const handleCreate = () => {
-    if (selectedUsers.length === 0) return;
-    onCreate(selectedUsers.map(u => u.id), groupName.trim() || undefined);
+  const handleEmailInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === 'Enter' || e.key === ',' || e.key === ' ') && emailInput.trim()) {
+      e.preventDefault();
+      const email = emailInput.trim();
+      if (email && !invitedEmails.includes(email) && email.includes('@')) {
+        setInvitedEmails([...invitedEmails, email]);
+        setEmailInput('');
+      }
+    }
   };
+
+  const removeInvitedEmail = (emailToRemove: string) => {
+    setInvitedEmails(invitedEmails.filter(email => email !== emailToRemove));
+  };
+
+  const handleCreate = () => {
+    if (selectedUsers.length === 0 && invitedEmails.length === 0) return;
+    onCreate(selectedUsers.map(u => u.id), groupName.trim() || undefined, invitedEmails);
+  };
+
+  const filteredUsers = users.filter(user => 
+    !selectedUsers.some(su => su.id === user.id) &&
+    (user.name.toLowerCase().includes(emailInput.toLowerCase()) || user.email.toLowerCase().includes(emailInput.toLowerCase()))
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>New Conversation</DialogTitle>
-          <DialogDescription>Select one or more people to start a chat.</DialogDescription>
+          <DialogDescription>Select people to start a chat, or invite by email.</DialogDescription>
         </DialogHeader>
-        <Command>
-          <CommandInput placeholder="Search for people..." />
-          <div className="flex flex-wrap gap-1 p-2 border-b">
-            {selectedUsers.map(user => (
-              <Badge key={user.id} variant="secondary">
-                {user.name}
-                <button onClick={() => handleSelectUser(user)} className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                  <XCircle className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
+        <Command className="rounded-lg">
+          <div className="p-2 border-b">
+            <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
+              {selectedUsers.map(user => (
+                <Badge key={user.id} variant="secondary">
+                  {user.name}
+                  <button onClick={() => handleSelectUser(user)} className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {invitedEmails.map(email => (
+                <Badge key={email} variant="outline">
+                  {email}
+                  <button onClick={() => removeInvitedEmail(email)} className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <CommandInput 
+              placeholder="Search or invite by email..." 
+              value={emailInput}
+              onValueChange={setEmailInput}
+              onKeyDown={handleEmailInputKeyDown}
+            />
           </div>
           <CommandList>
             <CommandEmpty>No users found.</CommandEmpty>
-            <CommandGroup>
-              {users.map(user => (
+            <CommandGroup heading="Suggestions">
+              {filteredUsers.map(user => (
                 <CommandItem
                   key={user.id}
-                  onSelect={() => handleSelectUser(user)}
+                  onSelect={() => {
+                    handleSelectUser(user);
+                    setEmailInput('');
+                  }}
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
@@ -326,23 +368,25 @@ function NewConversationDialog({ open, onOpenChange, onCreate }: NewConversation
                       <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <span>{user.name}</span>
+                    <span className="text-xs text-muted-foreground">{user.email}</span>
                   </div>
-                  {selectedUsers.some(u => u.id === user.id) && <Check className="h-4 w-4" />}
                 </CommandItem>
               ))}
             </CommandGroup>
           </CommandList>
         </Command>
-        {selectedUsers.length > 1 && (
-          <Input 
-            placeholder="Group name (optional)"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-          />
-        )}
-        <Button onClick={handleCreate} disabled={selectedUsers.length === 0}>
-          Start Chat
-        </Button>
+        <div className="p-6 pt-0 space-y-4">
+          {(selectedUsers.length + invitedEmails.length) > 1 && (
+            <Input 
+              placeholder="Group name (optional)"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+          )}
+          <Button onClick={handleCreate} disabled={selectedUsers.length === 0 && invitedEmails.length === 0} className="w-full">
+            Start Chat
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
