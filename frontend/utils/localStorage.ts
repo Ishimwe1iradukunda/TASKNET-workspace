@@ -2,7 +2,6 @@ import type { Note } from '~backend/workspace/notes/create';
 import type { Task } from '~backend/workspace/tasks/create';
 import type { Wiki } from '~backend/workspace/wikis/create';
 import type { Project } from '~backend/workspace/projects/create';
-import type { Email } from '~backend/workspace/emails/list';
 import type { Document } from '~backend/workspace/documents/list';
 import type { Reminder } from '~backend/reminders/create';
 
@@ -57,7 +56,6 @@ export class LocalStorageManager {
   private static readonly TASKS_KEY = 'tasknetworkspace_tasks';
   private static readonly WIKIS_KEY = 'tasknetworkspace_wikis';
   private static readonly PROJECTS_KEY = 'tasknetworkspace_projects';
-  private static readonly EMAILS_KEY = 'tasknetworkspace_emails';
   private static readonly DOCUMENTS_KEY = 'tasknetworkspace_documents';
   private static readonly FORMS_KEY = 'tasknetworkspace_forms';
   private static readonly CUSTOM_FIELDS_KEY = 'tasknetworkspace_custom_fields';
@@ -65,7 +63,7 @@ export class LocalStorageManager {
   private static readonly REMINDERS_KEY = 'tasknetworkspace_reminders';
 
   static init() {
-    const keys = [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY, this.REMINDERS_KEY];
+    const keys = [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY, this.REMINDERS_KEY];
     keys.forEach(key => {
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, JSON.stringify([]));
@@ -360,65 +358,6 @@ export class LocalStorageManager {
         }
       ];
       this.saveNotes(sampleNotes);
-
-      // Add sample emails with variety
-      const sampleEmails = [
-        {
-          id: crypto.randomUUID(),
-          sender: "welcome@tasknet.app",
-          recipient: "you@example.com",
-          subject: "Welcome to TaskNet!",
-          body: "Welcome to TaskNet! We're excited to have you on board. This workspace will help you stay organized and productive.\n\nHere are some quick tips to get started:\n\n1. Create your first task or note using the Quick Capture button\n2. Explore the different views (Grid, List, Kanban)\n3. Set up your first project to organize related work\n4. Try the search functionality to find content quickly\n5. Check out the wiki section for building your knowledge base\n\nIf you have any questions, feel free to reach out to our support team. We're here to help you make the most of TaskNet!\n\nBest regards,\nThe TaskNet Team",
-          isRead: false,
-          receivedAt: new Date(),
-        },
-        {
-          id: crypto.randomUUID(),
-          sender: "notifications@tasknet.app",
-          recipient: "you@example.com",
-          subject: "Daily Digest - 3 tasks due today",
-          body: "Good morning! Here's your daily digest:\n\n📅 TASKS DUE TODAY:\n• Review quarterly budget report (High priority)\n• Update team wiki documentation\n• Submit expense reports\n\n⏰ UPCOMING THIS WEEK:\n• Prepare presentation for client meeting (Due tomorrow)\n• Schedule one-on-one meetings (Due in 6 days)\n\n✅ RECENTLY COMPLETED:\n• Set up development environment\n• Complete onboarding checklist\n\nYou're making great progress! Keep up the good work.\n\nBest,\nTaskNet Notifications",
-          isRead: true,
-          receivedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-        },
-        {
-          id: crypto.randomUUID(),
-          sender: "team@acmecorp.com",
-          recipient: "you@example.com",
-          subject: "Q4 Planning Meeting - Action Items",
-          body: "Hi team,\n\nThanks for a productive Q4 planning session yesterday. Here are the key action items we discussed:\n\n🎯 IMMEDIATE ACTIONS (This Week):\n• Sarah: Finalize product roadmap by Oct 20\n• Mike: Prepare market entry strategy by Oct 25\n• Jennifer: Draft job descriptions for new positions\n• Alex: Set up performance tracking dashboard\n\n📊 Q4 OBJECTIVES:\n1. Product Launch - New feature set release\n2. Market Expansion - Enter European market\n3. Team Growth - Hire 5 new team members\n4. Customer Retention - Achieve 95% retention rate\n\n📅 NEXT MEETINGS:\n• Weekly check-ins: Every Tuesday at 10 AM\n• Monthly progress review: First Monday of each month\n• Board presentation: December 15th\n\nLet me know if you have any questions about your assigned tasks.\n\nBest,\nSarah Johnson\nProject Manager",
-          isRead: true,
-          receivedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-        },
-        {
-          id: crypto.randomUUID(),
-          sender: "security@company.com",
-          recipient: "you@example.com",
-          subject: "🔒 Security Certificate Renewal Required",
-          body: "URGENT: Security Certificate Renewal Required\n\nDear System Administrator,\n\nThis is an automated reminder that the following security certificates are expiring soon:\n\n⚠️ CERTIFICATES EXPIRING:\n• SSL Certificate (*.company.com) - Expires: October 13, 2024\n• Code Signing Certificate - Expires: October 15, 2024\n• API Gateway Certificate - Expires: October 18, 2024\n\n📋 ACTION REQUIRED:\n1. Download new certificates from the certificate authority\n2. Update server configurations\n3. Test all affected services\n4. Update monitoring systems\n\n⏰ DEADLINE: These certificates must be renewed within 48 hours to avoid service disruptions.\n\nIf you need assistance with the renewal process, please contact the IT security team immediately.\n\nRegards,\nIT Security Team\nsecurity@company.com",
-          isRead: false,
-          receivedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-        },
-        {
-          id: crypto.randomUUID(),
-          sender: "client@bigcompany.com",
-          recipient: "you@example.com",
-          subject: "Feedback on Latest Proposal",
-          body: "Hello,\n\nThank you for the comprehensive proposal you sent last week. Our team has reviewed it thoroughly, and we're impressed with the approach you've outlined.\n\n✅ WHAT WE LIKED:\n• Clear timeline and milestones\n• Detailed technical specifications\n• Competitive pricing structure\n• Strong team credentials\n\n📝 QUESTIONS/CONCERNS:\n• Can the delivery timeline be accelerated by 2 weeks?\n• What's the backup plan if key team members become unavailable?\n• Are there any additional costs we should be aware of?\n• Can you provide references from similar projects?\n\n📅 NEXT STEPS:\nWe'd like to schedule a meeting to discuss these points in detail. Are you available for a call this Thursday at 2 PM EST?\n\nLooking forward to moving forward with this project.\n\nBest regards,\nMichael Chen\nCTO, BigCompany Inc.\nmichael.chen@bigcompany.com",
-          isRead: true,
-          receivedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        },
-        {
-          id: crypto.randomUUID(),
-          sender: "hr@company.com",
-          recipient: "you@example.com",
-          subject: "Reminder: Annual Performance Review Due",
-          body: "Annual Performance Review Reminder\n\nDear Team Member,\n\nThis is a friendly reminder that your annual performance review is due in 30 days.\n\n📋 WHAT YOU NEED TO PREPARE:\n• Self-assessment form (due in 2 weeks)\n• Goal achievement summary\n• Professional development plan for next year\n• 360-degree feedback forms (if applicable)\n\n📅 IMPORTANT DATES:\n• Self-assessment deadline: November 1, 2024\n• Manager review meeting: November 8, 2024\n• Final review submission: November 15, 2024\n\n💡 TIPS FOR SUCCESS:\n• Review your goals from the beginning of the year\n• Gather examples of your key accomplishments\n• Think about areas where you'd like to grow\n• Prepare questions about career development\n\n🔗 RESOURCES:\n• Performance review guide: [Internal Link]\n• Self-assessment template: [Internal Link]\n• Goal setting worksheet: [Internal Link]\n\nIf you have any questions about the review process, please don't hesitate to reach out to HR or your manager.\n\nBest regards,\nHuman Resources Team",
-          isRead: false,
-          receivedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-        }
-      ];
-      this.saveEmails(sampleEmails);
 
       // Add sample wiki pages with hierarchical structure
       const sampleWikis = [
@@ -781,25 +720,6 @@ export class LocalStorageManager {
   }
   static deleteProject = (id: string) => this.saveProjects(this.getProjects().filter(p => p.id !== id));
 
-  // Email management
-  static getEmails(): Email[] {
-    return this.getItems<Email>(this.EMAILS_KEY).map(email => ({
-      ...email,
-      receivedAt: new Date(email.receivedAt),
-    }));
-  }
-  static saveEmails = (emails: Email[]) => this.saveItems(this.EMAILS_KEY, emails);
-  static updateEmail(id: string, updates: Partial<Email>): Email {
-    const emails = this.getEmails();
-    const index = emails.findIndex(e => e.id === id);
-    if (index === -1) throw new Error('Email not found');
-    const updatedEmail = { ...emails[index], ...updates };
-    emails[index] = updatedEmail;
-    this.saveEmails(emails);
-    return updatedEmail;
-  }
-  static deleteEmail = (id: string) => this.saveEmails(this.getEmails().filter(e => e.id !== id));
-
   // Document management (metadata only)
   static getDocuments(): Document[] {
     return this.getItems<Document>(this.DOCUMENTS_KEY).map(doc => ({
@@ -884,7 +804,7 @@ export class LocalStorageManager {
 
   // General utilities
   static clearAll() {
-    [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.EMAILS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY, this.REMINDERS_KEY].forEach(key => {
+    [this.NOTES_KEY, this.TASKS_KEY, this.WIKIS_KEY, this.PROJECTS_KEY, this.DOCUMENTS_KEY, this.FORMS_KEY, this.CUSTOM_FIELDS_KEY, this.AUTOMATIONS_KEY, this.REMINDERS_KEY].forEach(key => {
       localStorage.removeItem(key);
     });
     this.init();

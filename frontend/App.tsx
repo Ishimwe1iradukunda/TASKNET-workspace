@@ -6,7 +6,6 @@ import { TasksView } from './components/TasksView';
 import { KanbanView } from './components/KanbanView';
 import { WikisView } from './components/WikisView';
 import { ProjectsView } from './components/ProjectsView';
-import { EmailView } from './components/EmailView';
 import { CalendarView } from './components/CalendarView';
 import { DocumentsView } from './components/DocumentsView';
 import { ToolsView } from './components/ToolsView';
@@ -31,7 +30,7 @@ import { SideMenu } from './components/SideMenu';
 import { Footer } from './components/Footer';
 
 export type ViewType = 
-  | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'email' | 'calendar' 
+  | 'notes' | 'tasks' | 'kanban' | 'wikis' | 'projects' | 'calendar' 
   | 'documents' | 'tools' | 'time-tracking' | 'portfolios' | 'sprints' 
   | 'goals' | 'data' | 'dashboard' | 'activity' | 'automations' 
   | 'custom-fields' | 'forms' | 'planner' | 'chat' | 'reminders';
@@ -77,7 +76,6 @@ function AppInner() {
       case 'kanban': return <KanbanView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'wikis': return <WikisView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'projects': return <ProjectsView key={refreshKey} isOfflineMode={isOfflineMode} />;
-      case 'email': return <EmailView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'calendar': return <CalendarView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'documents': return <DocumentsView key={refreshKey} isOfflineMode={isOfflineMode} />;
       case 'tools': return <ToolsView key={refreshKey} isOfflineMode={isOfflineMode} />;

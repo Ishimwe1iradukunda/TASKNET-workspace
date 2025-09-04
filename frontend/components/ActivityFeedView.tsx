@@ -10,8 +10,8 @@ import { LocalStorageManager } from '../utils/localStorage';
 
 interface ActivityItem {
   id: string;
-  type: 'task' | 'project' | 'note' | 'wiki' | 'email' | 'document';
-  action: 'created' | 'updated' | 'completed' | 'deleted' | 'uploaded' | 'received';
+  type: 'task' | 'project' | 'note' | 'wiki' | 'document';
+  action: 'created' | 'updated' | 'completed' | 'deleted' | 'uploaded';
   title: string;
   description?: string;
   timestamp: Date;
@@ -45,7 +45,6 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
         const projects = LocalStorageManager.getProjects();
         const notes = LocalStorageManager.getNotes();
         const wikis = LocalStorageManager.getWikis();
-        const emails = LocalStorageManager.getEmails();
         const documents = LocalStorageManager.getDocuments();
 
         const allActivities: ActivityItem[] = [
@@ -84,15 +83,6 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
             description: wiki.content.substring(0, 100) + '...',
             timestamp: wiki.updatedAt,
             metadata: { tags: wiki.tags },
-          })),
-          ...emails.map(email => ({
-            id: `email-${email.id}`,
-            type: 'email' as const,
-            action: 'received' as const,
-            title: email.subject,
-            description: `From: ${email.sender}`,
-            timestamp: email.receivedAt,
-            metadata: { sender: email.sender, isRead: email.isRead },
           })),
           ...documents.map(doc => ({
             id: `document-${doc.id}`,
@@ -154,7 +144,6 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
       case 'project': return FolderOpen;
       case 'note': return FileText;
       case 'wiki': return FileText;
-      case 'email': return Mail;
       case 'document': return Calendar;
       default: return Clock;
     }
@@ -167,7 +156,6 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
       case 'updated': return 'text-orange-600 bg-orange-50';
       case 'deleted': return 'text-red-600 bg-red-50';
       case 'uploaded': return 'text-purple-600 bg-purple-50';
-      case 'received': return 'text-cyan-600 bg-cyan-50';
       default: return 'text-muted-foreground bg-muted';
     }
   };
@@ -237,7 +225,6 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
               <SelectItem value="project">Projects</SelectItem>
               <SelectItem value="note">Notes</SelectItem>
               <SelectItem value="wiki">Wiki Pages</SelectItem>
-              <SelectItem value="email">Emails</SelectItem>
               <SelectItem value="document">Documents</SelectItem>
             </SelectContent>
           </Select>
@@ -253,7 +240,6 @@ export function ActivityFeedView({ isOfflineMode }: ActivityFeedViewProps) {
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="deleted">Deleted</SelectItem>
               <SelectItem value="uploaded">Uploaded</SelectItem>
-              <SelectItem value="received">Received</SelectItem>
             </SelectContent>
           </Select>
         </div>

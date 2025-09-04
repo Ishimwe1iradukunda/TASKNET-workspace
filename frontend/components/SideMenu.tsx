@@ -87,7 +87,6 @@ export function SideMenu({ currentView, onViewChange, isOfflineMode }: SideMenuP
   ];
 
   const collaborationItems: NavItem[] = [
-    { id: "email", icon: Mail, label: "Inbox" },
     { id: "calendar", icon: Calendar, label: "Calendar" },
     { id: "documents", icon: Database, label: "Documents" },
     { id: "chat", icon: ActivityIcon, label: "Chat" },

@@ -19,6 +19,8 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [stream, setStream] = useState<any>(null);
+  const [username, setUsername] = useState(localStorage.getItem('chat_username') || '');
+  const [isUsernameSet, setIsUsernameSet] = useState(!!localStorage.getItem('chat_username'));
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -29,13 +31,13 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
   }, [isOfflineMode]);
 
   useEffect(() => {
-    if (selectedProject && !isOfflineMode) {
+    if (selectedProject && !isOfflineMode && isUsernameSet) {
       connectToChannel(selectedProject.id);
     }
     return () => {
       stream?.close();
     };
-  }, [selectedProject, isOfflineMode]);
+  }, [selectedProject, isOfflineMode, isUsernameSet]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,12 +74,22 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
     }
   };
 
+  const handleSetUsername = () => {
+    if (username.trim()) {
+      localStorage.setItem('chat_username', username.trim());
+      setIsUsernameSet(true);
+      toast({ title: "Welcome!", description: `You've joined the chat as ${username.trim()}` });
+    } else {
+      toast({ title: "Error", description: "Please enter a username", variant: "destructive" });
+    }
+  };
+
   const sendMessage = async () => {
-    if (!newMessage.trim() || !stream || !selectedProject) return;
+    if (!newMessage.trim() || !stream || !selectedProject || !isUsernameSet) return;
     try {
       await stream.send({
         projectId: selectedProject.id,
-        author: 'You', // In a real app, this would be the authenticated user's name
+        author: username,
         content: newMessage,
       });
       setNewMessage('');
@@ -94,6 +106,26 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
           <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">Chat Unavailable</h3>
           <p className="text-muted-foreground">Chat requires an active internet connection.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isUsernameSet) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-background">
+        <div className="text-center w-full max-w-sm p-8 space-y-4 bg-card rounded-lg shadow-lg">
+          <MessageSquare className="w-16 h-16 mx-auto text-primary mb-4" />
+          <h3 className="text-2xl font-bold">Join the Chat</h3>
+          <p className="text-muted-foreground">Please enter a username to start chatting.</p>
+          <Input 
+            placeholder="Your name" 
+            value={username} 
+            onChange={(e) => setUsername(e.target.value)} 
+            onKeyPress={(e) => e.key === 'Enter' && handleSetUsername()}
+            className="h-12 text-lg"
+          />
+          <Button onClick={handleSetUsername} className="w-full h-12 text-lg">Join Chat</Button>
         </div>
       </div>
     );
@@ -134,14 +166,16 @@ export function ChatView({ isOfflineMode }: ChatViewProps) {
             </div>
             <div className="flex-1 overflow-auto p-6 space-y-4">
               {messages.map((msg, index) => (
-                <div key={index} className="flex flex-col">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-semibold">{msg.author}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString() : ''}
-                    </span>
+                <div key={index} className={`flex flex-col ${msg.author === username ? 'items-end' : 'items-start'}`}>
+                  <div className={`p-3 rounded-lg max-w-lg ${msg.author === username ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="font-semibold">{msg.author}</span>
+                      <span className="text-xs opacity-70">
+                        {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
                   </div>
-                  <p>{msg.content}</p>
                 </div>
               ))}
               <div ref={messagesEndRef} />

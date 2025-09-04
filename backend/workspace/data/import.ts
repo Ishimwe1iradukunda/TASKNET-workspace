@@ -6,7 +6,6 @@ export interface ImportDataRequest {
   tasks?: any[];
   wikis?: any[];
   projects?: any[];
-  emails?: any[];
   documents?: any[]; // Note: document files are not imported, only metadata.
   overwrite?: boolean;
 }
@@ -17,7 +16,6 @@ export interface ImportDataResponse {
     tasks: number;
     wikis: number;
     projects: number;
-    emails: number;
     documents: number;
   };
 }
@@ -30,12 +28,10 @@ export const importData = api<ImportDataRequest, ImportDataResponse>(
     let tasksImported = 0;
     let wikisImported = 0;
     let projectsImported = 0;
-    let emailsImported = 0;
     let documentsImported = 0;
     
     if (req.overwrite) {
       await db.exec`DELETE FROM documents`;
-      await db.exec`DELETE FROM emails`;
       await db.exec`DELETE FROM projects`;
       await db.exec`DELETE FROM wikis`;
       await db.exec`DELETE FROM tasks`;
@@ -97,20 +93,6 @@ export const importData = api<ImportDataRequest, ImportDataResponse>(
       }
     }
 
-    if (req.emails) {
-      for (const email of req.emails) {
-        await db.exec`
-          INSERT INTO emails (id, sender, recipient, subject, body, is_read, received_at)
-          VALUES (${email.id}, ${email.sender}, ${email.recipient}, ${email.subject}, ${email.body}, 
-                  ${email.is_read}, ${email.received_at})
-          ON CONFLICT (id) DO UPDATE SET
-            sender = EXCLUDED.sender, recipient = EXCLUDED.recipient, subject = EXCLUDED.subject,
-            body = EXCLUDED.body, is_read = EXCLUDED.is_read, received_at = EXCLUDED.received_at
-        `;
-        emailsImported++;
-      }
-    }
-
     if (req.documents) {
       for (const doc of req.documents) {
         await db.exec`
@@ -130,7 +112,6 @@ export const importData = api<ImportDataRequest, ImportDataResponse>(
         tasks: tasksImported,
         wikis: wikisImported,
         projects: projectsImported,
-        emails: emailsImported,
         documents: documentsImported,
       },
     };

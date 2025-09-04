@@ -3,13 +3,13 @@ import { db } from "../db";
 
 export interface SearchRequest {
   query: Query<string>;
-  type?: Query<"all" | "notes" | "tasks" | "projects" | "wikis" | "emails" | "documents">;
+  type?: Query<"all" | "notes" | "tasks" | "projects" | "wikis" | "documents">;
   limit?: Query<number>;
 }
 
 export interface SearchResult {
   id: string;
-  type: "note" | "task" | "project" | "wiki" | "email" | "document";
+  type: "note" | "task" | "project" | "wiki" | "document";
   title: string;
   content?: string;
   excerpt: string;
@@ -206,48 +206,6 @@ export const enterpriseSearch = api<SearchRequest, SearchResponse>(
           metadata: {
             updatedAt: row.updated_at,
             tags: safeParseJSON(row.tags, [] as string[]),
-          },
-        });
-      }
-    }
-
-    // Emails
-    if (type === "all" || type === "emails") {
-      const rows = await db.rawQueryAll<{
-        id: string;
-        sender: string;
-        recipient: string;
-        subject: string;
-        body: string;
-        is_read: boolean;
-        received_at: Date;
-      }>(
-        `
-        SELECT id, sender, recipient, subject, body, is_read, received_at
-        FROM emails
-        WHERE subject ILIKE $1 OR body ILIKE $1 OR sender ILIKE $1 OR recipient ILIKE $1
-        ORDER BY received_at DESC
-        LIMIT $2
-        `,
-        like,
-        limit
-      );
-      for (const row of rows) {
-        const score =
-          (row.subject.toLowerCase().includes(q.toLowerCase()) ? 2 : 0) +
-          (row.body.toLowerCase().includes(q.toLowerCase()) ? 1 : 0);
-        results.push({
-          id: row.id,
-          type: "email",
-          title: row.subject,
-          content: row.body,
-          excerpt: createExcerpt(row.body, q),
-          score,
-          metadata: {
-            sender: row.sender,
-            recipient: row.recipient,
-            isRead: row.is_read,
-            receivedAt: row.received_at,
           },
         });
       }

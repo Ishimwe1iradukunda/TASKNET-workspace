@@ -2,11 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, FileText, CheckSquare, FolderOpen, BookOpen, Mail, Database } from "lucide-react";
+import { Loader2, Search, FileText, CheckSquare, FolderOpen, BookOpen, Database } from "lucide-react";
 import backend from "~backend/client";
 import { LocalStorageManager } from "../utils/localStorage";
 
-type ResultType = "note" | "task" | "project" | "wiki" | "email" | "document";
+type ResultType = "note" | "task" | "project" | "wiki" | "document";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -18,7 +18,6 @@ interface CommandPaletteProps {
       | "tasks"
       | "projects"
       | "wikis"
-      | "email"
       | "documents"
   ) => void;
 }
@@ -39,8 +38,6 @@ function iconForType(t: ResultType) {
       return FolderOpen;
     case "wiki":
       return BookOpen;
-    case "email":
-      return Mail;
     case "document":
       return Database;
     case "note":
@@ -58,8 +55,6 @@ function viewForType(t: ResultType): NavView {
       return "projects" as NavView;
     case "wiki":
       return "wikis" as NavView;
-    case "email":
-      return "email" as NavView;
     case "document":
       return "documents" as NavView;
     case "note":
@@ -136,16 +131,6 @@ export function CommandPalette({ open, onOpenChange, isOfflineMode, onNavigate }
               excerpt: w.content.slice(0, 120),
               meta: { tags: w.tags },
             }));
-          const emails = LocalStorageManager.getEmails()
-            .filter(e => e.subject.toLowerCase().includes(ql) || e.body.toLowerCase().includes(ql) || e.sender.toLowerCase().includes(ql))
-            .slice(0, 25)
-            .map<ResultItem>(e => ({
-              id: e.id,
-              type: "email",
-              title: e.subject,
-              excerpt: `From: ${e.sender}`,
-              meta: { isRead: e.isRead, receivedAt: e.receivedAt },
-            }));
           const documents = LocalStorageManager.getDocuments()
             .filter(d => d.name.toLowerCase().includes(ql))
             .slice(0, 25)
@@ -156,7 +141,7 @@ export function CommandPalette({ open, onOpenChange, isOfflineMode, onNavigate }
               excerpt: d.fileType,
               meta: { size: d.size },
             }));
-          const merged = [...notes, ...tasks, ...projects, ...wikis, ...emails, ...documents].slice(0, 50);
+          const merged = [...notes, ...tasks, ...projects, ...wikis, ...documents].slice(0, 50);
           if (!cancelled) setResults(merged);
         } else {
           const r = await backend.workspace.enterpriseSearch({ query: q, type: "all", limit: 50 });
@@ -222,7 +207,7 @@ export function CommandPalette({ open, onOpenChange, isOfflineMode, onNavigate }
               setQ(e.target.value);
               setSelected(0);
             }}
-            placeholder="Search notes, tasks, projects, wikis, emails, documents..."
+            placeholder="Search notes, tasks, projects, wikis, documents..."
             className="h-10"
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
@@ -299,9 +284,6 @@ function renderMetaBadges(item: ResultItem) {
   if (item.type === "task") {
     if (m.priority) badges.push(<Badge key="p" variant="outline" className="text-xs capitalize">{String(m.priority)}</Badge>);
     if (m.status) badges.push(<Badge key="s" variant="secondary" className="text-xs capitalize">{String(m.status)}</Badge>);
-  }
-  if (item.type === "email") {
-    if (m.isRead === false) badges.push(<Badge key="u" variant="destructive" className="text-xs">unread</Badge>);
   }
   if (Array.isArray(m.tags) && m.tags.length > 0) {
     badges.push(<Badge key="t" variant="outline" className="text-xs">{String(m.tags[0])}</Badge>);

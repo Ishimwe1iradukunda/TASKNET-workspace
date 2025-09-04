@@ -6,7 +6,6 @@ export interface ExportDataResponse {
   tasks: any[];
   wikis: any[];
   projects: any[];
-  emails: any[];
   documents: any[];
   exportedAt: Date;
 }
@@ -19,7 +18,6 @@ export const exportData = api<void, ExportDataResponse>(
     const tasksRows = await db.queryAll`SELECT * FROM tasks ORDER BY created_at DESC`;
     const wikisRows = await db.queryAll`SELECT * FROM wikis ORDER BY created_at DESC`;
     const projectsRows = await db.queryAll`SELECT * FROM projects ORDER BY created_at DESC`;
-    const emailsRows = await db.queryAll`SELECT * FROM emails ORDER BY received_at DESC`;
     const documentsRows = await db.queryAll`SELECT * FROM documents ORDER BY created_at DESC`;
     
     const notes = notesRows.map(row => ({
@@ -38,7 +36,6 @@ export const exportData = api<void, ExportDataResponse>(
     }));
 
     const projects = projectsRows.map(row => ({ ...row }));
-    const emails = emailsRows.map(row => ({ ...row }));
     const documents = documentsRows.map(row => ({ ...row }));
     
     return {
@@ -46,7 +43,6 @@ export const exportData = api<void, ExportDataResponse>(
       tasks,
       wikis,
       projects,
-      emails,
       documents,
       exportedAt: new Date(),
     };

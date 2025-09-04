@@ -238,9 +238,6 @@ import { deleteDocument as api_workspace_delete_deleteDocument } from "~backend/
 import { getDocument as api_workspace_get_getDocument } from "~backend/documents/get";
 import { listDocuments as api_workspace_list_listDocuments } from "~backend/documents/list";
 import { getUploadUrl as api_workspace_upload_url_getUploadUrl } from "~backend/documents/upload_url";
-import { deleteEmail as api_workspace_delete_deleteEmail } from "~backend/emails/delete";
-import { listEmails as api_workspace_list_listEmails } from "~backend/emails/list";
-import { updateEmail as api_workspace_update_updateEmail } from "~backend/emails/update";
 import { createForm as api_workspace_create_createForm } from "~backend/forms/create";
 import { listForms as api_workspace_list_listForms } from "~backend/forms/list";
 import { createGoal as api_workspace_create_createGoal } from "~backend/goals/create";
@@ -301,7 +298,6 @@ export namespace workspace {
             this.createTask = this.createTask.bind(this)
             this.createWiki = this.createWiki.bind(this)
             this.deleteDocument = this.deleteDocument.bind(this)
-            this.deleteEmail = this.deleteEmail.bind(this)
             this.deleteNote = this.deleteNote.bind(this)
             this.deleteProject = this.deleteProject.bind(this)
             this.deleteTask = this.deleteTask.bind(this)
@@ -315,7 +311,6 @@ export namespace workspace {
             this.listAutomations = this.listAutomations.bind(this)
             this.listCustomFields = this.listCustomFields.bind(this)
             this.listDocuments = this.listDocuments.bind(this)
-            this.listEmails = this.listEmails.bind(this)
             this.listForms = this.listForms.bind(this)
             this.listGoals = this.listGoals.bind(this)
             this.listNotes = this.listNotes.bind(this)
@@ -329,7 +324,6 @@ export namespace workspace {
             this.splitPdf = this.splitPdf.bind(this)
             this.startTimeEntry = this.startTimeEntry.bind(this)
             this.stopTimeEntry = this.stopTimeEntry.bind(this)
-            this.updateEmail = this.updateEmail.bind(this)
             this.updateNote = this.updateNote.bind(this)
             this.updateProject = this.updateProject.bind(this)
             this.updateTask = this.updateTask.bind(this)
@@ -461,13 +455,6 @@ export namespace workspace {
         }
 
         /**
-         * Deletes an email.
-         */
-        public async deleteEmail(params: { id: string }): Promise<void> {
-            await this.baseClient.callTypedAPI(`/emails/${encodeURIComponent(params.id)}`, {method: "DELETE", body: undefined})
-        }
-
-        /**
          * Deletes a note.
          */
         public async deleteNote(params: { id: string }): Promise<void> {
@@ -586,15 +573,6 @@ export namespace workspace {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/documents`, {method: "GET", body: undefined})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listDocuments>
-        }
-
-        /**
-         * Retrieves all emails.
-         */
-        public async listEmails(): Promise<ResponseType<typeof api_workspace_list_listEmails>> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI(`/emails`, {method: "GET", body: undefined})
-            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listEmails>
         }
 
         /**
@@ -762,18 +740,6 @@ export namespace workspace {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/time/stop/${encodeURIComponent(params.id)}`, {method: "PUT", body: JSON.stringify(body)})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_tracking_stopTimeEntry>
-        }
-
-        /**
-         * Updates an email's read status.
-         */
-        public async updateEmail(params: RequestType<typeof api_workspace_update_updateEmail>): Promise<void> {
-            // Construct the body with only the fields which we want encoded within the body (excluding query string or header fields)
-            const body: Record<string, any> = {
-                isRead: params.isRead,
-            }
-
-            await this.baseClient.callTypedAPI(`/emails/${encodeURIComponent(params.id)}`, {method: "PUT", body: JSON.stringify(body)})
         }
 
         /**
