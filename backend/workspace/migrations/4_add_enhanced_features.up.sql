@@ -119,17 +119,6 @@ CREATE TABLE whiteboards (
   updated_at TIMESTAMPTZ NOT NULL
 );
 
--- Chat Messages
-CREATE TABLE chat_messages (
-  id TEXT PRIMARY KEY,
-  project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
-  task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,
-  author TEXT NOT NULL,
-  content TEXT NOT NULL,
-  message_type TEXT NOT NULL DEFAULT 'text' CHECK (message_type IN ('text', 'file', 'system')),
-  created_at TIMESTAMPTZ NOT NULL
-);
-
 -- Create indexes
 CREATE INDEX idx_time_entries_task_id ON time_entries(task_id);
 CREATE INDEX idx_time_entries_project_id ON time_entries(project_id);
@@ -155,10 +144,6 @@ CREATE INDEX idx_form_submissions_form_id ON form_submissions(form_id);
 CREATE INDEX idx_form_submissions_submitted_at ON form_submissions(submitted_at);
 
 CREATE INDEX idx_whiteboards_project_id ON whiteboards(project_id);
-
-CREATE INDEX idx_chat_messages_project_id ON chat_messages(project_id);
-CREATE INDEX idx_chat_messages_task_id ON chat_messages(task_id);
-CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at);
 
 -- Add sprint_id to tasks table for sprint planning
 ALTER TABLE tasks ADD COLUMN sprint_id TEXT REFERENCES sprints(id) ON DELETE SET NULL;

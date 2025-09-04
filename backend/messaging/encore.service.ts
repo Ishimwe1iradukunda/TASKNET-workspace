@@ -1,3 +1,3 @@
 import { Service } from "encore.dev/service";
 
-export default new Service("chat");
+export default new Service("messaging");

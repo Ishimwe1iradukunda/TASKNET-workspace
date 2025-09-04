@@ -33,7 +33,7 @@ const BROWSER = typeof globalThis === "object" && ("window" in globalThis);
  * Client is an API client for the  Encore application.
  */
 export class Client {
-    public readonly chat: chat.ServiceClient
+    public readonly messaging: messaging.ServiceClient
     public readonly notification: notification.ServiceClient
     public readonly reminders: reminders.ServiceClient
     public readonly workspace: workspace.ServiceClient
@@ -51,7 +51,7 @@ export class Client {
         this.target = target
         this.options = options ?? {}
         const base = new BaseClient(this.target, this.options)
-        this.chat = new chat.ServiceClient(base)
+        this.messaging = new messaging.ServiceClient(base)
         this.notification = new notification.ServiceClient(base)
         this.reminders = new reminders.ServiceClient(base)
         this.workspace = new workspace.ServiceClient(base)
@@ -88,9 +88,14 @@ export interface ClientOptions {
 /**
  * Import the endpoint handlers to derive the types for the client.
  */
-import { chat as api_chat_chat_chat } from "~backend/chat/chat";
+import { chat as api_messaging_chat_chat } from "~backend/messaging/chat";
+import {
+    createConversation as api_messaging_conversations_createConversation,
+    getConversation as api_messaging_conversations_getConversation,
+    listConversations as api_messaging_conversations_listConversations
+} from "~backend/messaging/conversations";
 
-export namespace chat {
+export namespace messaging {
 
     export class ServiceClient {
         private baseClient: BaseClient
@@ -98,18 +103,49 @@ export namespace chat {
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.chat = this.chat.bind(this)
+            this.createConversation = this.createConversation.bind(this)
+            this.getConversation = this.getConversation.bind(this)
+            this.listConversations = this.listConversations.bind(this)
         }
 
         /**
-         * chat is a bidirectional streaming API for real-time chat in projects.
+         * chat is a bidirectional streaming API for real-time chat in conversations.
          */
-        public async chat(params: RequestType<typeof api_chat_chat_chat>): Promise<StreamInOut<StreamRequest<typeof api_chat_chat_chat>, StreamResponse<typeof api_chat_chat_chat>>> {
+        public async chat(params: RequestType<typeof api_messaging_chat_chat>): Promise<StreamInOut<StreamRequest<typeof api_messaging_chat_chat>, StreamResponse<typeof api_messaging_chat_chat>>> {
             // Convert our params into the objects we need for the request
             const query = makeRecord<string, string | string[]>({
-                projectId: params.projectId,
+                conversationId: params.conversationId,
+                userId:         params.userId,
             })
 
-            return await this.baseClient.createStreamInOut(`/chat`, {query})
+            return await this.baseClient.createStreamInOut(`/messaging/stream`, {query})
+        }
+
+        /**
+         * createConversation starts a new conversation with one or more users.
+         */
+        public async createConversation(params: RequestType<typeof api_messaging_conversations_createConversation>): Promise<ResponseType<typeof api_messaging_conversations_createConversation>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/conversations`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_messaging_conversations_createConversation>
+        }
+
+        /**
+         * getConversation retrieves details and messages for a specific conversation.
+         */
+        public async getConversation(params: { conversationId: string }): Promise<ResponseType<typeof api_messaging_conversations_getConversation>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/conversations/${encodeURIComponent(params.conversationId)}`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_messaging_conversations_getConversation>
+        }
+
+        /**
+         * listConversations retrieves all conversations for the current user.
+         */
+        public async listConversations(): Promise<ResponseType<typeof api_messaging_conversations_listConversations>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/conversations`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_messaging_conversations_listConversations>
         }
     }
 }
@@ -272,6 +308,7 @@ import {
     startTimeEntry as api_workspace_tracking_startTimeEntry,
     stopTimeEntry as api_workspace_tracking_stopTimeEntry
 } from "~backend/time/tracking";
+import { listUsers as api_workspace_list_listUsers } from "~backend/users/list";
 import { createWiki as api_workspace_create_createWiki } from "~backend/wikis/create";
 import { deleteWiki as api_workspace_delete_deleteWiki } from "~backend/wikis/delete";
 import { listWikis as api_workspace_list_listWikis } from "~backend/wikis/list";
@@ -319,6 +356,7 @@ export namespace workspace {
             this.listSprints = this.listSprints.bind(this)
             this.listTasks = this.listTasks.bind(this)
             this.listTimeEntries = this.listTimeEntries.bind(this)
+            this.listUsers = this.listUsers.bind(this)
             this.listWikis = this.listWikis.bind(this)
             this.mergePdf = this.mergePdf.bind(this)
             this.splitPdf = this.splitPdf.bind(this)
@@ -682,6 +720,15 @@ export namespace workspace {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/time/entries`, {query, method: "GET", body: undefined})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_tracking_listTimeEntries>
+        }
+
+        /**
+         * listUsers retrieves all users in the workspace.
+         */
+        public async listUsers(): Promise<ResponseType<typeof api_workspace_list_listUsers>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/users`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_workspace_list_listUsers>
         }
 
         /**
