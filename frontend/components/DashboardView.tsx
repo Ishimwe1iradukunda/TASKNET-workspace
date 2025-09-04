@@ -49,13 +49,24 @@ export function DashboardView({ isOfflineMode, onViewChange }: DashboardViewProp
     weekTasks: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [quickActions] = useState([
-    { icon: CheckSquare, label: 'New Task', action: 'tasks' as ViewType },
-    { icon: FileText, label: 'New Note', action: 'notes' as ViewType },
-    { icon: Target, label: 'New Project', action: 'projects' as ViewType },
-    { icon: Clock, label: 'Start Timer', action: 'time-tracking' as ViewType },
-  ]);
   const { toast } = useToast();
+
+  const quickActionCategories = [
+    {
+      title: 'Content Creation',
+      actions: [
+        { label: 'New Task', action: 'tasks' as ViewType },
+        { label: 'New Note', action: 'notes' as ViewType },
+        { label: 'New Project', action: 'projects' as ViewType },
+      ]
+    },
+    {
+      title: 'Utilities',
+      actions: [
+        { label: 'Start Timer', action: 'time-tracking' as ViewType },
+      ]
+    }
+  ];
 
   useEffect(() => {
     loadDashboardData();
@@ -181,12 +192,23 @@ export function DashboardView({ isOfflineMode, onViewChange }: DashboardViewProp
             <Plus className="w-5 h-5" />
             Quick Actions
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
-              <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onViewChange(action.action)}>
-                <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                  <action.icon className="w-8 h-8 mb-2 text-primary" />
-                  <span className="text-sm font-medium">{action.label}</span>
+          <div className="space-y-4">
+            {quickActionCategories.map((category, catIndex) => (
+              <Card key={catIndex}>
+                <CardContent className="p-4">
+                  <h4 className="font-semibold text-blue-500 mb-3">{category.title}</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {category.actions.map((action, actIndex) => (
+                      <Button
+                        key={actIndex}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onViewChange(action.action)}
+                      >
+                        {action.label}
+                      </Button>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             ))}
