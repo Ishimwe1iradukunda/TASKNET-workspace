@@ -34,6 +34,7 @@ const BROWSER = typeof globalThis === "object" && ("window" in globalThis);
  */
 export class Client {
     public readonly chat: chat.ServiceClient
+    public readonly notification: notification.ServiceClient
     public readonly reminders: reminders.ServiceClient
     public readonly workspace: workspace.ServiceClient
     private readonly options: ClientOptions
@@ -51,6 +52,7 @@ export class Client {
         this.options = options ?? {}
         const base = new BaseClient(this.target, this.options)
         this.chat = new chat.ServiceClient(base)
+        this.notification = new notification.ServiceClient(base)
         this.reminders = new reminders.ServiceClient(base)
         this.workspace = new workspace.ServiceClient(base)
     }
@@ -108,6 +110,71 @@ export namespace chat {
             })
 
             return await this.baseClient.createStreamInOut(`/chat`, {query})
+        }
+    }
+}
+
+/**
+ * Import the endpoint handlers to derive the types for the client.
+ */
+import { listNotifications as api_notification_list_listNotifications } from "~backend/notification/list";
+import { markAsRead as api_notification_mark_as_read_markAsRead } from "~backend/notification/mark_as_read";
+import {
+    getSettings as api_notification_settings_getSettings,
+    updateSettings as api_notification_settings_updateSettings
+} from "~backend/notification/settings";
+
+export namespace notification {
+
+    export class ServiceClient {
+        private baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.getSettings = this.getSettings.bind(this)
+            this.listNotifications = this.listNotifications.bind(this)
+            this.markAllAsRead = this.markAllAsRead.bind(this)
+            this.markAsRead = this.markAsRead.bind(this)
+            this.updateSettings = this.updateSettings.bind(this)
+        }
+
+        /**
+         * getSettings retrieves notification settings for the current user.
+         */
+        public async getSettings(): Promise<ResponseType<typeof api_notification_settings_getSettings>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/notifications/settings`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_notification_settings_getSettings>
+        }
+
+        /**
+         * listNotifications retrieves all notifications for the current user.
+         */
+        public async listNotifications(): Promise<ResponseType<typeof api_notification_list_listNotifications>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/notifications`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_notification_list_listNotifications>
+        }
+
+        /**
+         * markAllAsRead marks all unread notifications as read.
+         */
+        public async markAllAsRead(): Promise<void> {
+            await this.baseClient.callTypedAPI(`/notifications/read-all`, {method: "PUT", body: undefined})
+        }
+
+        /**
+         * markAsRead marks a single notification as read.
+         */
+        public async markAsRead(params: { id: string }): Promise<void> {
+            await this.baseClient.callTypedAPI(`/notifications/${encodeURIComponent(params.id)}/read`, {method: "PUT", body: undefined})
+        }
+
+        /**
+         * updateSettings updates notification settings for the current user.
+         */
+        public async updateSettings(params: RequestType<typeof api_notification_settings_updateSettings>): Promise<void> {
+            await this.baseClient.callTypedAPI(`/notifications/settings`, {method: "PUT", body: JSON.stringify(params)})
         }
     }
 }
