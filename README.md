@@ -61,7 +61,7 @@ docker run -p 3000:3000 tasknet
 ##  Usage
 
 1.  Start the server.\
-2.  Open `http://localhost:3000` in your browser.\
+2.  Open [`http://localhost:3000`](https://github.com/Ishimwe1iradukunda/TASKNET-workspace) in your browser.\
 3.  Instantly begin creating tasks, managing projects, or chatting with
     your team.
 
