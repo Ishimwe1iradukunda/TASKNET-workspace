@@ -33,10 +33,10 @@ organizing workflows in a shared environment.
 
 ##   Tech Stack
 
--   **Frontend:** React (or your actual choice)\
--   **Backend:** Node.js (or your actual backend tech)\
--   **Database:** PostgreSQL / MongoDB (update as needed)\
--   **Deployment:** Self-hosted (Docker / Linux server / cloud VM)
+-   **Frontend:** React
+-   **Backend:** Node.js
+-   **Database:** PostgreSQL / MongoDB 
+-   **Deployment:**Dockerized containers
 
 
 ##  Installation
