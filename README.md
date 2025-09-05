@@ -64,6 +64,9 @@ docker run -p 3000:3000 tasknet
 2.  Open [`http://localhost:3000`](https://github.com/Ishimwe1iradukunda/TASKNET-workspace) in your browser.\
 3.  Instantly begin creating tasks, managing projects, or chatting with
     your team.
+4. create new task  ** click "new task"
+5. team chat ** open the chat panel to collaborate with your team in real time
+6. project management ** track project progress using kanban view or project management .    
 
  No signup required -- TaskNet works out of the box for everyone in
 the same organization.
