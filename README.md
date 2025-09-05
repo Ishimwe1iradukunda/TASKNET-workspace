@@ -16,20 +16,21 @@ organizing workflows in a shared environment.
 -    **Task & Project Management** -- Create, assign, and organize
     tasks and projects.\
 -    **Notes & Documentation** -- Write quick notes or long-form
-    docs.\
--    **Calendar & Reminders** -- Manage deadlines and get notified.\
+    docs.
+-    **Calendar & Reminders** -- Manage deadlines and get notified.
 -    **Team Chat** -- Collaborate in real time within the same
-    organization.\
+    organization.
 -    **Goals & Sprints** -- Organize tasks into goals or agile
-    sprints.\
+    sprints.
 -     **Time Tracking** -- Start timers directly from tasks.\
--    **File Handling** -- Upload and manage documents.\
--    **PDF Tools** -- Convert, store, and manage PDF documents.\
--    **Converters** -- Built-in document conversion utilities.\
+-    **File Handling** -- Upload and manage documents.
+-    **PDF Tools** -- Convert, store, and manage PDF documents.
+-    **Converters** -- Built-in document conversion utilities as well as pdf to document and vice versa and more .
 -    **Data Management** -- Store and retrieve structured project
-    data.\
+    data.
 -    **Quick Actions** -- One-click creation of tasks, notes, or
     projects
+-  ** voice record** record clear voice and download it .
 
 ##   Tech Stack
 
