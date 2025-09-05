@@ -44,7 +44,7 @@ organizing workflows in a shared environment.
 Clone the repository and run TaskNet locally:
 
 ``` bash
-git clone [https://github.com/yourusername/tasknet.git](https://github.com/Ishimwe1iradukunda/TASKNET-workspace/blob/main/README.md)
+git clone [[https://github.com/yourusername/tasknet.git](https://github.com/Ishimwe1iradukunda/TASKNET-workspace/blob/main/README.md)](https://github.com/Ishimwe1iradukunda/TASKNET-workspace)
 cd tasknet
 npm install
 npm run dev
