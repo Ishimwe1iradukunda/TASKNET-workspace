@@ -16,28 +16,27 @@ organizing workflows in a shared environment.
 -    **Task & Project Management** -- Create, assign, and organize
     tasks and projects.\
 -    **Notes & Documentation** -- Write quick notes or long-form
-    docs.
--    **Calendar & Reminders** -- Manage deadlines and get notified.
+    docs.\
+-    **Calendar & Reminders** -- Manage deadlines and get notified.\
 -    **Team Chat** -- Collaborate in real time within the same
-    organization.
+    organization.\
 -    **Goals & Sprints** -- Organize tasks into goals or agile
-    sprints.
+    sprints.\
 -     **Time Tracking** -- Start timers directly from tasks.\
--    **File Handling** -- Upload and manage documents.
--    **PDF Tools** -- Convert, store, and manage PDF documents.
--    **Converters** -- Built-in document conversion utilities as well as pdf to document and vice versa and more .
+-    **File Handling** -- Upload and manage documents.\
+-    **PDF Tools** -- Convert, store, and manage PDF documents.\
+-    **Converters** -- Built-in document conversion utilities.\
 -    **Data Management** -- Store and retrieve structured project
-    data.
+    data.\
 -    **Quick Actions** -- One-click creation of tasks, notes, or
     projects
--  ** voice record** record clear voice and download it .
 
 ##   Tech Stack
 
--   **Frontend:** React
--   **Backend:** Node.js
--   **Database:** PostgreSQL / MongoDB 
--   **Deployment:**Dockerized containers
+-   **Frontend:** React (or your actual choice)\
+-   **Backend:** Node.js (or your actual backend tech)\
+-   **Database:** PostgreSQL / MongoDB (update as needed)\
+-   **Deployment:** Self-hosted (Docker / Linux server / cloud VM)
 
 
 ##  Installation
@@ -45,7 +44,7 @@ organizing workflows in a shared environment.
 Clone the repository and run TaskNet locally:
 
 ``` bash
-git clone [[https://github.com/yourusername/tasknet.git](https://github.com/Ishimwe1iradukunda/TASKNET-workspace/blob/main/README.md)](https://github.com/Ishimwe1iradukunda/TASKNET-workspace)
+git clone https://github.com/yourusername/tasknet.git
 cd tasknet
 npm install
 npm run dev
@@ -62,12 +61,9 @@ docker run -p 3000:3000 tasknet
 ##  Usage
 
 1.  Start the server.\
-2.  Open [`http://localhost:3000`](https://github.com/Ishimwe1iradukunda/TASKNET-workspace) in your browser.
+2.  Open `http://localhost:3000` in your browser.\
 3.  Instantly begin creating tasks, managing projects, or chatting with
     your team.
-4. create new task  ** click "new task"
-5. team chat ** open the chat panel to collaborate with your team in real time
-6. project management ** track project progress using kanban view or project management .    
 
  No signup required -- TaskNet works out of the box for everyone in
 the same organization.
